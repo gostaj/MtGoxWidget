@@ -1,0 +1,27 @@
+ _______ __        _______                    ________ __     __                __   
+|   |   |  |_     |     __|.-----..--.--.    |  |  |  |__|.--|  |.-----..-----.|  |_ 
+|       |   _|    |    |  ||  _  ||_   _|    |  |  |  |  ||  _  ||  _  ||  -__||   _|
+|__|_|__|____|    |_______||_____||__.__|    |________|__||_____||___  ||_____||____|
+                                                                 |_____|             
+
+An Android widget for displaying the current value of a Bitcoin in US dollars on the
+Mt Gox Bitcoin exchange. A 24h graph is shown if you tap the widget.
+
+The widget will be updated every 30th minute (which currently isn't configurable).
+Value will be green if the value has increased (compared to the previous value),
+red if it has decreased, or yellow if the value hasn't changed.
+
+I'm happy to receive feedback, bug reports and Bitcoins:
+13o3CTyDC1U3RrWogKxukVqWc7fXsuekmR
+
+Uses the Apache 2.0 licensed chart library AChartEngine:
+http://www.achartengine.org/
+
+Bitcoin is a virtual digital currency, read more here:
+http://www.bitcoin.org/
+
+Mt Gox Bitcoin Exchange:
+https://mtgox.com
+
+The widget page on Android market:
+https://market.android.com/details?id=st.brothas.mtgoxwidget
