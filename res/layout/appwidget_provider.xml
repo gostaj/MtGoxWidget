@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/appwidget_box"
+              android:background="@drawable/my_border"
+              android:gravity="center"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:padding="3dp">
+
+    <!-- Top row -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:orientation="horizontal"
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:textColor="#ffffff">
+
+        <TextView
+                android:id="@+id/appwidget_low"
+                android:gravity="left"
+                android:textSize="5pt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"/>
+
+        <TextView
+                android:id="@+id/appwidget_high"
+                android:gravity="right"
+                android:textSize="5pt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"/>
+    </LinearLayout>
+
+    <!-- Last value -->
+    <TextView
+            android:id="@+id/appwidget_last"
+            android:gravity="center"
+            android:textSize="9pt"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#aa5555"/>
+
+    <!-- Bitcoin logo -->
+    <ImageView
+            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:adjustViewBounds="true"
+            android:src="@drawable/bc_logo_60"/>
+
+    <!-- Bottom row -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:gravity="center_horizontal"
+                  android:layout_width="wrap_content"
+                  android:layout_height="fill_parent">
+
+        <TextView
+                android:id="@+id/appwidget_updated"
+                android:gravity="bottom"
+                android:textSize="5pt"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:textColor="#cccccc"/>
+
+    </LinearLayout>
+
+</LinearLayout>
+
