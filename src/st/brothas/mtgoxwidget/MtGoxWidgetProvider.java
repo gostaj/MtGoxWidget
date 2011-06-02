@@ -91,9 +91,9 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 
     private static void updateViews(RemoteViews views, MtGoxTickerData prevData, MtGoxTickerData newData) {
         String updated = "@ " + dateFormat.format(newData.getTimestamp());
-        String lastRounded = round(3, newData.getLast());
-        String lowRounded = round(3, newData.getLow());
-        String highRounded = round(3, newData.getHigh());
+        String lastRounded = round(2, newData.getLast());
+        String lowRounded = round(2, newData.getLow());
+        String highRounded = round(2, newData.getHigh());
 
         views.setTextViewText(R.id.appwidget_last, "$" + lastRounded);
         views.setTextColor(R.id.appwidget_updated, Color.parseColor("#cccccc"));
