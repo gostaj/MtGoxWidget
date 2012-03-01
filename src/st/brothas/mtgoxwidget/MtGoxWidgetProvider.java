@@ -28,9 +28,7 @@ import android.widget.RemoteViews;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 import st.brothas.mtgoxwidget.net.HttpManager;
@@ -49,10 +47,8 @@ import java.util.Date;
  */
 public class MtGoxWidgetProvider extends AppWidgetProvider {
     public static final String LOG_TAG = "MtGox";
-	private static final String MTGOX_URL = "https://mtgox.com/code/data/ticker.php";
 	private static final SimpleDateFormat dateFormat= new SimpleDateFormat("E HH:mm");
     private static final int DATA_IS_CONSIDERED_OLD_AFTER_MINUTES = 60;
-
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -63,21 +59,35 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
         }
     }
 
-    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
+    static void updateAppWidget(final Context context, AppWidgetManager appWidgetManager,
             int appWidgetId) {
+
+        RateService rateService = MtGoxPreferences.getRateService(context, appWidgetId);
+        if (rateService == null) {
+            // Don't do anything unless the rate service has been chosen.
+            // Show a "please remove this widget and add a new one"
+            appWidgetManager.updateAppWidget(appWidgetId,
+                    new RemoteViews(context.getPackageName(), R.layout.appwidget_replace_me));
+            return;
+        }
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.appwidget_provider);
         Intent clickIntent = new Intent(context, GraphPopupActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, clickIntent, 0);
+        clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        clickIntent.setAction("dummyAction"); // Needed to get the extra variables included in the call
+        // Note: the appWidgetId needs to be sent in the pendingIntent as request code, otherwise only ONE
+        //       cached intent will be used for all widget instances!
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, appWidgetId, clickIntent, 0);
         views.setOnClickPendingIntent(R.id.appwidget_box, pendingIntent);
+        views.setTextViewText(R.id.appwidget_service_name, rateService.getName());
 
-		MtGoxDataOpenHelper dbHelper = new MtGoxDataOpenHelper(context);
-        MtGoxTickerData prevData = dbHelper.getLastTickerData();
+        MtGoxDataOpenHelper dbHelper = new MtGoxDataOpenHelper(context);
+        MtGoxTickerData prevData = dbHelper.getLastTickerData(rateService);
 
         MtGoxTickerData newData;
-        JSONObject latestQuoteJSON = getLatestQuoteJSON();
+        JSONObject latestQuoteJSON = getLatestQuoteJSON(rateService);
         if (latestQuoteJSON != null) {
-            newData = new MtGoxTickerData(latestQuoteJSON);
+            newData = rateService.parseJSON(latestQuoteJSON);
             storeLastValueIfNotNull(dbHelper, newData);
             updateViews(views, prevData, newData);
         } else if (prevData != null) {
@@ -125,11 +135,14 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
     }
 
     private static String round(int decimals, Double value) {
-        return BigDecimal.valueOf(value).setScale(decimals, BigDecimal.ROUND_HALF_UP).toString();
+        if (value != null && value > 0) {
+            return BigDecimal.valueOf(value).setScale(decimals, BigDecimal.ROUND_HALF_UP).toString();
+        } else {
+            return "N/A";
+        }
     }
 
     private static int getColorFromValueChange(Double prevValue, Double nowValue) {
-        //Log.i(LOG_TAG, "Prev: " + prevValue + " Now: " + nowValue + " eq? " + prevValue.equals(nowValue));
     	if (prevValue == null || nowValue == null || prevValue.equals(nowValue)) {
     		return Color.YELLOW;
     	} else if (prevValue < nowValue) {
@@ -147,8 +160,8 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
        }
 	}
 
-    private static JSONObject getLatestQuoteJSON() {
-            HttpGet httpget = new HttpGet(MTGOX_URL);
+    private static JSONObject getLatestQuoteJSON(RateService rateService) {
+        HttpGet httpget = new HttpGet(rateService.getTickerUrl());
             HttpResponse response;
             try {
                 response = HttpManager.execute(httpget);
@@ -156,7 +169,9 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
                 JSONObject jObject = null;
                 if (entity != null) {
                     InputStream instream = entity.getContent();
-                    String result= convertStreamToString(instream);
+                    String result = convertStreamToString(instream);
+//                    Log.d(LOG_TAG, "Getting URI: " + httpget.getURI());
+//                    Log.d(LOG_TAG, "Response: " + result);
                     jObject = new JSONObject(result);
                     instream.close();
                 }
@@ -185,6 +200,22 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 		}
 		return sb.toString();
 	}
+
+@Override
+    public void onDeleted(Context context, int[] appWidgetIds) {
+        // When the user deletes the widget, delete the preference associated with it.
+        final int N = appWidgetIds.length;
+        for (int i=0; i<N; i++) {
+            MtGoxPreferences.deletePrefs(context, appWidgetIds[i]);
+        }
+    }
+
+    public static void updateAppWidgetWithWaitMessage(Context context,
+                                                      AppWidgetManager appWidgetManager,
+                                                      int appWidgetId) {
+        appWidgetManager.updateAppWidget(appWidgetId,
+                new RemoteViews(context.getPackageName(), R.layout.appwidget_loading));
+    }
 }
 
 

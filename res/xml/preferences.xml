@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--http://www.kaloer.com/android-preferences-->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+            android:title="Exchange service"
+            android:summary="The exchange service that the Bitcoin rate is taken from"
+            android:key="servicePref"
+            android:entries="@array/serviceList"
+            android:entryValues="@array/serviceValues"
+            android:defaultValue="MTGOX" />
+
+    <Preference
+            android:title="Add widget"
+            android:summary="Click here to add widget to home screen"
+            android:key="addWidget" />
+
+</PreferenceScreen>

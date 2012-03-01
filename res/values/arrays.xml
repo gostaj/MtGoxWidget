@@ -1,0 +1,13 @@
+<resources>
+    <string-array name="serviceList">
+        <item>Mt Gox</item>
+        <item>Camp BX</item>
+        <item>Bitfloor</item>
+    </string-array>
+
+    <string-array name="serviceValues">
+        <item>MTGOX</item>
+        <item>CAMPBX</item>
+        <item>BITFLOOR</item>
+    </string-array>
+</resources>

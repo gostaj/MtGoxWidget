@@ -17,12 +17,7 @@
  */
 package st.brothas.mtgoxwidget;
 
-import android.util.Log;
-import org.json.JSONObject;
-
 import java.util.Date;
-
-import static st.brothas.mtgoxwidget.MtGoxWidgetProvider.LOG_TAG;
 
 
 /**
@@ -30,21 +25,13 @@ import static st.brothas.mtgoxwidget.MtGoxWidgetProvider.LOG_TAG;
  */
 public class MtGoxTickerData {
 
-    Double last = 0D;
-    Double low = 0D;
-    Double high = 0D;
-    Double buy = 0D;
-    Double sell = 0D;
-    Date timestamp;
-
-    public MtGoxTickerData(JSONObject json) {
-        this();
-        last = parseDouble(MtGoxTickerUtil.getJSONTickerKey(json, "last"));
-        low = parseDouble(MtGoxTickerUtil.getJSONTickerKey(json, "low"));
-        high = parseDouble(MtGoxTickerUtil.getJSONTickerKey(json, "high"));
-        buy = parseDouble(MtGoxTickerUtil.getJSONTickerKey(json, "buy"));
-        sell = parseDouble(MtGoxTickerUtil.getJSONTickerKey(json, "sell"));
-    }
+    private RateService rateService;
+    private Double last;
+    private Double low;
+    private Double high;
+    private Double buy;
+    private Double sell;
+    private Date timestamp;
 
     public MtGoxTickerData() {
         timestamp = new Date();
@@ -98,13 +85,12 @@ public class MtGoxTickerData {
         this.timestamp = timestamp;
     }
 
-    private static Double parseDouble(String last) {
-        try {
-            return Double.parseDouble(last);
-        } catch (NumberFormatException e) {
-            Log.w(LOG_TAG, "Unable to parse float: '" + last + "'");
-            return null;
-        }
+    public RateService getRateService() {
+        return rateService;
+    }
+
+    public void setRateService(RateService rateService) {
+        this.rateService = rateService;
     }
 
     @Override

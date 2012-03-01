@@ -28,15 +28,35 @@ import static st.brothas.mtgoxwidget.MtGoxWidgetProvider.LOG_TAG;
   */
 public class MtGoxTickerUtil {
 
-    static String getJSONTickerKey(JSONObject json, String key) {
+    public static String getJSONTickerKeyFromObject(JSONObject json, String objectName, String key) {
         JSONObject tickerObject;
 		try {
-			tickerObject = json.getJSONObject("ticker");
+			tickerObject = json.getJSONObject(objectName);
 			return tickerObject.getString(key);
 		} catch (JSONException e) {
 			Log.e(LOG_TAG, "Error when getting JSON key: '" + key + "' from json: '" + json + "'", e);
 		}
 		return "N/A";
     }
+
+    public static String getJSONTickerKey(JSONObject json, String key) {
+		try {
+			return json.getString(key);
+		} catch (JSONException e) {
+			Log.e(LOG_TAG, "Error when getting JSON key: '" + key + "' from json: '" + json + "'", e);
+		}
+		return "N/A";
+    }
+
+    public static Double tryToParseDouble(String last) {
+        try {
+            return Double.parseDouble(last);
+        } catch (NumberFormatException e) {
+            Log.w(LOG_TAG, "Unable to parse float: '" + last + "'");
+            return null;
+        }
+    }
+
+
 
 }

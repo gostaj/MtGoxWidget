@@ -33,9 +33,10 @@ import static st.brothas.mtgoxwidget.MtGoxWidgetProvider.LOG_TAG;
 
 public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 	
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
     private static final String DATABASE_NAME = "mtgox";
     private static final String TICKER_DATA_TABLE_NAME = "ticker_data";
+    private static final String COLUMN_SOURCE = "source";
     private static final String COLUMN_TIMESTAMP = "timestamp";
     private static final String COLUMN_HIGH = "high";
     private static final String COLUMN_LOW = "low";
@@ -44,20 +45,29 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
     private static final String COLUMN_SELL = "sell";
     private static final String LAST_TABLE_CREATE =
                 "CREATE TABLE " + TICKER_DATA_TABLE_NAME + " (" +
+                        COLUMN_SOURCE + " INTEGER NOT NULL DEFAULT " + RateService.MTGOX.getId() + ", " +
                         COLUMN_TIMESTAMP + " INTEGER, " +
                         COLUMN_HIGH + " REAL, " +
                         COLUMN_LOW + " REAL, " +
                         COLUMN_LAST + " REAL, " +
                         COLUMN_BUY + " REAL, " +
                         COLUMN_SELL + " REAL);";
-	private static final String QUERY_COUNT_LAST_VALUES = "SELECT COUNT(*) FROM "
+
+	private static final String QUERY_COUNT_LAST_VALUES =
+            "SELECT COUNT(*) FROM "
 			+ TICKER_DATA_TABLE_NAME + ";";
-	private static final String QUERY_LAST_TICKER_DATA = "SELECT * FROM " +
-			TICKER_DATA_TABLE_NAME + " ORDER BY "
-			+ COLUMN_TIMESTAMP + " DESC LIMIT 1;";
-    private static final String QUERY_NEWEST_TICKER_DATA = "SELECT * FROM " +
-            TICKER_DATA_TABLE_NAME + " WHERE " + COLUMN_TIMESTAMP + " > ? " +
-            "ORDER BY " + COLUMN_TIMESTAMP + " DESC;";
+
+	private static final String QUERY_LAST_TICKER_DATA =
+            "SELECT * FROM " + TICKER_DATA_TABLE_NAME +
+            " WHERE " + COLUMN_SOURCE + " = ? " +
+            " ORDER BY " + COLUMN_TIMESTAMP + " DESC LIMIT 1;";
+
+    private static final String QUERY_NEWEST_TICKER_DATA =
+            "SELECT * FROM " + TICKER_DATA_TABLE_NAME +
+            " WHERE " + COLUMN_TIMESTAMP + " > ? " +
+            " AND " + COLUMN_SOURCE + " = ? " +
+            " ORDER BY " + COLUMN_TIMESTAMP + " DESC;";
+
 	private static final Long TIME_TO_KEEP_DATA_IN_SECS = 60*60*25L; // 25 hours
 
     MtGoxDataOpenHelper(Context context) {
@@ -71,14 +81,21 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        //Log.d(LOG_TAG, "Upgrading DB from " + oldVersion + " to " + newVersion);
-        db.execSQL("DROP TABLE " + TICKER_DATA_TABLE_NAME);
-        onCreate(db);
+        Log.i(LOG_TAG, "Upgrading DB from " + oldVersion + " to " + newVersion);
+        if (oldVersion == 3) {
+            // Upgrade from DB version 3 to 4
+            db.execSQL("ALTER TABLE " + TICKER_DATA_TABLE_NAME +
+                    " ADD COLUMN " + COLUMN_SOURCE + " INTEGER NOT NULL DEFAULT " + RateService.MTGOX.getId());
+        } else {
+            db.execSQL("DROP TABLE " + TICKER_DATA_TABLE_NAME);
+            onCreate(db);
+        }
 	}
 
 	public void storeTickerData(MtGoxTickerData data) {
 		SQLiteDatabase db = getWritableDatabase();
-		ContentValues values = new ContentValues(4);
+		ContentValues values = new ContentValues();
+        values.put(COLUMN_SOURCE, data.getRateService().getId());
 		values.put(COLUMN_TIMESTAMP, System.currentTimeMillis()/1000);
 		values.put(COLUMN_LOW, data.getLow());
         values.put(COLUMN_HIGH, data.getHigh());
@@ -105,9 +122,10 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 	}
 
 	// Returns the last last value or null if no values have been stored.
-	public MtGoxTickerData getLastTickerData() {
+	public MtGoxTickerData getLastTickerData(RateService rateService) {
 		SQLiteDatabase db = getReadableDatabase();
-		Cursor cursor = db.rawQuery(QUERY_LAST_TICKER_DATA, null);
+        String[] selection = {rateService.getId().toString()};
+		Cursor cursor = db.rawQuery(QUERY_LAST_TICKER_DATA, selection);
 		MtGoxTickerData lastData = null;
 		if (cursor.getCount() > 0) {
 			cursor.moveToFirst();
@@ -115,13 +133,14 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 		}
 		cursor.close();
 		db.close();
-        //Log.d(LOG_TAG, "Last ticker data2: " + lastData);
 		return lastData;
 	}
 
     private MtGoxTickerData getTickerDataFromCursor(Cursor cursor) {
         MtGoxTickerData lastData;
         lastData = new MtGoxTickerData();
+        lastData.setRateService(RateService.getById(cursor.getColumnIndexOrThrow(COLUMN_SOURCE)));
+        // Null values will be zeroes. If null is important use cursor.isNull(columnIndex)
         lastData.setLow(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LOW)));
         lastData.setHigh(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_HIGH)));
         lastData.setLast(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LAST)));
@@ -140,10 +159,10 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 		db.close();
 	}
 
-    public List<MtGoxTickerData> getTickerData(Long since) {
+    public List<MtGoxTickerData> getTickerData(Long since, RateService rateService) {
         List<MtGoxTickerData> data = new ArrayList<MtGoxTickerData>();
         SQLiteDatabase db = getReadableDatabase();
-        String[] selection = {""+(since/1000)};
+        String[] selection = {String.valueOf(since/1000), rateService.getId().toString()};
         Cursor cursor = db.rawQuery(QUERY_NEWEST_TICKER_DATA, selection);
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
@@ -152,7 +171,6 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         db.close();
-        //Log.d(LOG_TAG, "getTickerData() found " + data.size() + " data points.");
         return data;
     }
 }

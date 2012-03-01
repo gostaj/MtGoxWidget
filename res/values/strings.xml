@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
-    <string name="app_name">Mt Gox Widget</string>
-    <string name="graph_popup_title">Mt Gox - Last 24 hours</string>
-    <string name="empty_graph">No data available, please wait until the widget has been updated.</string>
+    <string name="app_name">Bitcoin Widget</string>
+    <string name="empty_graph">No data available, please wait until the widget has been refreshed or refresh manually (press menu).</string>
     <string name="last">Last</string>
     <string name="high">High</string>
     <string name="low">Low</string>
     <string name="buy">Buy</string>
     <string name="sell">Sell</string>
+    <string name="appwidget_replace_text">Replace me with a new Bitcoin Widget</string>
+    <string name="appwidget_loading_text">Loading data...</string>
 </resources>

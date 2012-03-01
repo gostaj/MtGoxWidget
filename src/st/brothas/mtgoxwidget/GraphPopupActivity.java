@@ -18,12 +18,17 @@
 package st.brothas.mtgoxwidget;
 
 import android.app.Activity;
+import android.appwidget.AppWidgetManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.model.XYMultipleSeriesDataset;
@@ -47,19 +52,25 @@ public class GraphPopupActivity extends Activity {
     private static final long PADDING_MS = 15*60*1000; // Add 15 minutes to each side of the graph
     private static final long ONE_DAY_IN_MS = 24*60*60*1000; // 24 hours
     private boolean emptyChart = false;
+    private int appWidgetId;
 
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
 
+        appWidgetId = getIntent().getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
+
         MtGoxDataOpenHelper db = new MtGoxDataOpenHelper(this);
-        List<MtGoxTickerData> tickerData = db.getTickerData(System.currentTimeMillis() - ONE_DAY_IN_MS);
+        RateService rateService = MtGoxPreferences.getRateService(this, appWidgetId);
+        List<MtGoxTickerData> tickerData = db.getTickerData(System.currentTimeMillis() - ONE_DAY_IN_MS, rateService);
         if (tickerData.size() > 0) {
             setupChart(tickerData);
             emptyChart = false;
         } else {
             emptyChart = true;
         }
+
+        setTitle(rateService.getName() + " - Last 24 hours");
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND,
                 WindowManager.LayoutParams.FLAG_DIM_BEHIND);
@@ -75,13 +86,20 @@ public class GraphPopupActivity extends Activity {
         XYSeries buySeries = addSeries(getString(R.string.buy), Color.parseColor("#FFAAAA"), false);
         XYSeries lastSeries = addSeries(getString(R.string.last), Color.WHITE, true);
         for (MtGoxTickerData data : dataList) {
-            highSeries.add(data.getTimestamp().getTime(), data.getHigh());
-            lowSeries.add(data.getTimestamp().getTime(), data.getLow());
-            sellSeries.add(data.getTimestamp().getTime(), data.getSell());
-            buySeries.add(data.getTimestamp().getTime(), data.getBuy());
-            lastSeries.add(data.getTimestamp().getTime(), data.getLast());
+            //Log.d("Graphdata", data.toString());
+            addDataToSeriesIfNotNull(highSeries, data.getTimestamp().getTime(), data.getHigh());
+            addDataToSeriesIfNotNull(lowSeries, data.getTimestamp().getTime(), data.getLow());
+            addDataToSeriesIfNotNull(sellSeries, data.getTimestamp().getTime(), data.getSell());
+            addDataToSeriesIfNotNull(buySeries, data.getTimestamp().getTime(), data.getBuy());
+            addDataToSeriesIfNotNull(lastSeries, data.getTimestamp().getTime(), data.getLast());
         }
 
+    }
+
+    private void addDataToSeriesIfNotNull(XYSeries series, long time, Double value) {
+        if (value != null && value > 0) {
+            series.add(time, value);
+        }
     }
 
     private XYSeries addSeries(String title, int color, boolean mainLine) {
@@ -129,9 +147,11 @@ public class GraphPopupActivity extends Activity {
             layout.addView(tview, new LayoutParams(LayoutParams.FILL_PARENT,
                     LayoutParams.FILL_PARENT));
         } else {
+
             chartView = ChartFactory.getTimeChartView(this, dataset, renderer, "HH:mm");
             layout.addView(chartView, new LayoutParams(LayoutParams.FILL_PARENT,
                     LayoutParams.FILL_PARENT));
+
         }
 //      } else if (chartView != null) {
 //        chartView.repaint();
@@ -157,4 +177,27 @@ public class GraphPopupActivity extends Activity {
 //    }
 
 
+    // http://developer.android.com/guide/topics/ui/menus.html
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.graph_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.refreshMenu:
+                finish();
+                String toastText = "Refreshing rate from " +
+                        MtGoxPreferences.getRateService(this,appWidgetId).getName()+ "...";
+                Toast.makeText(this, toastText, Toast.LENGTH_LONG).show();
+                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+                MtGoxWidgetProvider.updateAppWidget(this, appWidgetManager, appWidgetId);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 }

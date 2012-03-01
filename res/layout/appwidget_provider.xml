@@ -42,13 +42,31 @@
             android:layout_height="wrap_content"
             android:textColor="#aa5555"/>
 
-    <!-- Bitcoin logo -->
-    <ImageView
-            android:gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:adjustViewBounds="true"
-            android:src="@drawable/bc_logo_60"/>
+    <!-- Layout for logo and service name -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:gravity="center_horizontal"
+                  android:orientation="horizontal"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content">
+
+        <!-- Bitcoin logo -->
+        <ImageView
+                android:gravity="left"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:adjustViewBounds="true"
+                android:src="@drawable/bc_logo_30"/>
+
+        <!-- Service name -->
+        <TextView
+                android:id="@+id/appwidget_service_name"
+                android:gravity="center_vertical"
+                android:textSize="5pt"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:textColor="#ffffff"/>
+
+    </LinearLayout>
 
     <!-- Bottom row -->
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
