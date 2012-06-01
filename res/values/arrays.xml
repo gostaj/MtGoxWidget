@@ -3,11 +3,15 @@
         <item>Mt Gox</item>
         <item>Camp BX</item>
         <item>Bitfloor</item>
+        <item>Bitstamp</item>
+        <item>Crypto X Change</item>
     </string-array>
 
     <string-array name="serviceValues">
         <item>MTGOX</item>
         <item>CAMPBX</item>
         <item>BITFLOOR</item>
+        <item>BITSTAMP</item>
+        <item>CRYPTOXCHANGE</item>
     </string-array>
 </resources>
