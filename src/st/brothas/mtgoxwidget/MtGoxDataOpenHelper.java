@@ -31,7 +31,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
-	private static final int DATABASE_VERSION = 4;
+	private static final int DATABASE_VERSION = 5;
 	private static final String DATABASE_NAME = "mtgox";
 	private static final String TICKER_DATA_TABLE_NAME = "ticker_data";
 	private static final String COLUMN_SOURCE = "source";
@@ -41,9 +41,7 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 	private static final String COLUMN_LAST = "last";
 	private static final String COLUMN_BUY = "buy";
 	private static final String COLUMN_SELL = "sell";
-	private static final String LAST_TABLE_CREATE = "CREATE TABLE " + TICKER_DATA_TABLE_NAME + " (" + COLUMN_SOURCE + " INTEGER NOT NULL DEFAULT " + RateService.MTGOX.getId()
-			+ ", " + COLUMN_TIMESTAMP + " INTEGER, " + COLUMN_HIGH + " REAL, " + COLUMN_LOW + " REAL, " + COLUMN_LAST + " REAL, " + COLUMN_BUY + " REAL, " + COLUMN_SELL
-			+ " REAL);";
+	private static final String COLUMN_VWAP = "vwap";
 	private static final String QUERY_COUNT_LAST_VALUES = "SELECT COUNT(*) FROM " + TICKER_DATA_TABLE_NAME + ";";
 	private static final String QUERY_LAST_TICKER_DATA = "SELECT * FROM " + TICKER_DATA_TABLE_NAME + " WHERE " + COLUMN_SOURCE + " = ? " + "ORDER BY " + COLUMN_TIMESTAMP
 			+ " DESC LIMIT 1";
@@ -59,21 +57,24 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 	@Override
 	public void onCreate(SQLiteDatabase db) {
 		Log.d(Constants.TAG, "MtGoxDataOpenHelper.onCreate: ");
-		db.execSQL(LAST_TABLE_CREATE);
+		onUpgrade(db, 0, DATABASE_VERSION);
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		Log.d(Constants.TAG, "Upgrading DB from " + oldVersion + " to " + newVersion);
-		if(oldVersion == 3) {
-			// Upgrade from DB version 3 to 4
-
-			// TODO: Nov 5, 2012 Leo: clean up. this code is unreachable. this
-			// is not how onUpgrade is meant to be used
+		if(oldVersion < 3) {
+			// init
+			db.execSQL("CREATE TABLE " + TICKER_DATA_TABLE_NAME + " (" + COLUMN_TIMESTAMP + " INTEGER, " + COLUMN_HIGH + " REAL, " + COLUMN_LOW + " REAL, " + COLUMN_LAST
+					+ " REAL, " + COLUMN_BUY + " REAL, " + COLUMN_SELL + " REAL);");
+		}
+		if(oldVersion < 4) {
+			// adding COLUMN_SOURCE
 			db.execSQL("ALTER TABLE " + TICKER_DATA_TABLE_NAME + " ADD COLUMN " + COLUMN_SOURCE + " INTEGER NOT NULL DEFAULT " + RateService.MTGOX.getId());
-		} else {
-			db.execSQL("DROP TABLE " + TICKER_DATA_TABLE_NAME);
-			onCreate(db);
+		}
+		if(oldVersion < 5) {
+			// adding vwap
+			db.execSQL("ALTER TABLE " + TICKER_DATA_TABLE_NAME + " ADD COLUMN " + COLUMN_VWAP + " REAL NOT NULL DEFAULT 0");
 		}
 	}
 
@@ -137,6 +138,7 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 		lastData.setLast(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LAST)));
 		lastData.setBuy(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_BUY)));
 		lastData.setSell(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SELL)));
+		lastData.setVwap(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_VWAP)));
 		lastData.setTimestamp(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP)) * 1000));
 		return lastData;
 	}

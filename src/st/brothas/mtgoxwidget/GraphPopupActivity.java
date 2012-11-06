@@ -163,8 +163,7 @@ public class GraphPopupActivity extends Activity {
 			AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
 			MtGoxWidgetProvider.updateAppWidget(this, appWidgetManager, appWidgetId);
 			return true;
-		} else {
-			return super.onOptionsItemSelected(item);
 		}
+		return super.onOptionsItemSelected(item);
 	}
 }

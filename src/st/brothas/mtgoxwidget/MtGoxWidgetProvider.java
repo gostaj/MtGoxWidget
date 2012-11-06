@@ -112,8 +112,12 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 			// Data is old, show it by "old" and "warning" colors
 			lastTextColor = Color.GRAY;
 			views.setTextColor(R.id.appwidget_updated, Color.RED);
+		} else if(newData.getVwap() != null) {
+			// We have https://en.wikipedia.org/wiki/VWAP to compare to get the
+			// color
+			lastTextColor = getColorFromValueChange(newData.getVwap(), newData.getLast());
 		} else if(prevData != null) {
-			// We have previous data, compare to get the color
+			// We have previous data to compare to. Lets use it to get the color
 			lastTextColor = getColorFromValueChange(prevData.getLast(), newData.getLast());
 		}
 		views.setTextColor(R.id.appwidget_last, lastTextColor);
@@ -141,10 +145,10 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 		}
 	}
 
-	private static int getColorFromValueChange(Double prevValue, Double nowValue) {
-		if(prevValue == null || nowValue == null || prevValue.equals(nowValue)) {
+	private static int getColorFromValueChange(Double averageValue, Double nowValue) {
+		if(averageValue == null || nowValue == null || averageValue.equals(nowValue)) {
 			return Color.YELLOW;
-		} else if(prevValue < nowValue) {
+		} else if(averageValue < nowValue) {
 			return Color.GREEN;
 		} else {
 			return Color.rgb(255, 50, 50);

@@ -41,7 +41,7 @@ public enum RateService {
 	}
 
 	public MtGoxTickerData parseJSON(JSONObject json) {
-		Log.d(Constants.TAG, "RateService.parseJSON: ");
+		Log.d(Constants.TAG, "RateService.parseJSON: " + json);
 		MtGoxTickerData tickerData = new MtGoxTickerData();
 
 		tickerData.setRateService(this);
@@ -85,6 +85,7 @@ public enum RateService {
 			tickerData.setHigh(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "high")));
 			tickerData.setBuy(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "buy")));
 			tickerData.setSell(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "sell")));
+			tickerData.setVwap(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "vwap")));
 		}
 		return tickerData;
 	}

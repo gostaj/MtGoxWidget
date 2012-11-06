@@ -26,6 +26,7 @@ public class MtGoxTickerData {
 	private Double high;
 	private Double buy;
 	private Double sell;
+	private Double vwap;
 	private Date timestamp;
 
 	public MtGoxTickerData() {
@@ -70,6 +71,14 @@ public class MtGoxTickerData {
 
 	public void setSell(Double sell) {
 		this.sell = sell;
+	}
+
+	public Double getVwap() {
+		return vwap;
+	}
+
+	public void setVwap(Double vwap) {
+		this.vwap = vwap;
 	}
 
 	public Date getTimestamp() {
