@@ -17,10 +17,20 @@
  */
 package st.brothas.mtgoxwidget;
 
+import java.util.List;
+
+import org.achartengine.ChartFactory;
+import org.achartengine.GraphicalView;
+import org.achartengine.model.XYMultipleSeriesDataset;
+import org.achartengine.model.XYSeries;
+import org.achartengine.renderer.XYMultipleSeriesRenderer;
+import org.achartengine.renderer.XYSeriesRenderer;
+
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,175 +39,132 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import org.achartengine.ChartFactory;
-import org.achartengine.GraphicalView;
-import org.achartengine.model.XYMultipleSeriesDataset;
-import org.achartengine.model.XYSeries;
-import org.achartengine.renderer.XYMultipleSeriesRenderer;
-import org.achartengine.renderer.XYSeriesRenderer;
-
-import java.util.List;
-
 
 /**
  * Represents the graph that shows the ticker data change in time.
  */
 public class GraphPopupActivity extends Activity {
+	private GraphicalView chartView;
+	private XYMultipleSeriesDataset dataset;
+	private XYMultipleSeriesRenderer renderer;
+	// Add 15 minutes to each side of the graph
+	private static final long PADDING_MS = 15 * 60 * 1000;
+	// 24 hours
+	private static final long ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
+	private boolean emptyChart = false;
+	private int appWidgetId;
 
-    private GraphicalView chartView;
-    private XYMultipleSeriesDataset dataset;
-    private XYMultipleSeriesRenderer renderer;
-//    private XYSeries currentSeries;
-//    private XYSeriesRenderer currentRenderer;
-    private static final long PADDING_MS = 15*60*1000; // Add 15 minutes to each side of the graph
-    private static final long ONE_DAY_IN_MS = 24*60*60*1000; // 24 hours
-    private boolean emptyChart = false;
-    private int appWidgetId;
+	@Override
+	protected void onCreate(Bundle bundle) {
+		Log.d(Constants.TAG, "GraphPopupActivity.onCreate: ");
+		super.onCreate(bundle);
 
-    @Override
-    protected void onCreate(Bundle bundle) {
-        super.onCreate(bundle);
+		appWidgetId = getIntent().getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
 
-        appWidgetId = getIntent().getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
+		MtGoxDataOpenHelper db = new MtGoxDataOpenHelper(this);
+		RateService rateService = MtGoxPreferences.getRateService(this, appWidgetId);
+		List<MtGoxTickerData> tickerData = db.getTickerData(System.currentTimeMillis() - ONE_DAY_IN_MS, rateService);
+		if(tickerData.size() > 0) {
+			setupChart(tickerData);
+			emptyChart = false;
+		} else {
+			emptyChart = true;
+		}
 
-        MtGoxDataOpenHelper db = new MtGoxDataOpenHelper(this);
-        RateService rateService = MtGoxPreferences.getRateService(this, appWidgetId);
-        List<MtGoxTickerData> tickerData = db.getTickerData(System.currentTimeMillis() - ONE_DAY_IN_MS, rateService);
-        if (tickerData.size() > 0) {
-            setupChart(tickerData);
-            emptyChart = false;
-        } else {
-            emptyChart = true;
-        }
+		setTitle(rateService.getName() + " - Last 24 hours");
 
-        setTitle(rateService.getName() + " - Last 24 hours");
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND, WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+		setContentView(R.layout.popup_graph_layout);
+	}
 
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND,
-                WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-        setContentView(R.layout.popup_graph_layout);
-    }
+	private void setupChart(List<MtGoxTickerData> dataList) {
+		dataset = new XYMultipleSeriesDataset();
+		renderer = initChart();
+		XYSeries highSeries = addSeries(getString(R.string.high), Color.parseColor("#00CC00"), false);
+		XYSeries lowSeries = addSeries(getString(R.string.low), Color.parseColor("#CC0000"), false);
+		XYSeries sellSeries = addSeries(getString(R.string.sell), Color.parseColor("#AAFFAA"), false);
+		XYSeries buySeries = addSeries(getString(R.string.buy), Color.parseColor("#FFAAAA"), false);
+		XYSeries lastSeries = addSeries(getString(R.string.last), Color.WHITE, true);
+		for(MtGoxTickerData data : dataList) {
+			addDataToSeriesIfNotNull(highSeries, data.getTimestamp().getTime(), data.getHigh());
+			addDataToSeriesIfNotNull(lowSeries, data.getTimestamp().getTime(), data.getLow());
+			addDataToSeriesIfNotNull(sellSeries, data.getTimestamp().getTime(), data.getSell());
+			addDataToSeriesIfNotNull(buySeries, data.getTimestamp().getTime(), data.getBuy());
+			addDataToSeriesIfNotNull(lastSeries, data.getTimestamp().getTime(), data.getLast());
+		}
+	}
 
-    private void setupChart(List<MtGoxTickerData> dataList) {
-        dataset = new XYMultipleSeriesDataset();
-        renderer = initChart();
-        XYSeries highSeries = addSeries(getString(R.string.high), Color.parseColor("#00CC00"), false);
-        XYSeries lowSeries = addSeries(getString(R.string.low), Color.parseColor("#CC0000"), false);
-        XYSeries sellSeries = addSeries(getString(R.string.sell), Color.parseColor("#AAFFAA"), false);
-        XYSeries buySeries = addSeries(getString(R.string.buy), Color.parseColor("#FFAAAA"), false);
-        XYSeries lastSeries = addSeries(getString(R.string.last), Color.WHITE, true);
-        for (MtGoxTickerData data : dataList) {
-            //Log.d("Graphdata", data.toString());
-            addDataToSeriesIfNotNull(highSeries, data.getTimestamp().getTime(), data.getHigh());
-            addDataToSeriesIfNotNull(lowSeries, data.getTimestamp().getTime(), data.getLow());
-            addDataToSeriesIfNotNull(sellSeries, data.getTimestamp().getTime(), data.getSell());
-            addDataToSeriesIfNotNull(buySeries, data.getTimestamp().getTime(), data.getBuy());
-            addDataToSeriesIfNotNull(lastSeries, data.getTimestamp().getTime(), data.getLast());
-        }
+	private void addDataToSeriesIfNotNull(XYSeries series, long time, Double value) {
+		if(value != null && value > 0) {
+			series.add(time, value);
+		}
+	}
 
-    }
+	private XYSeries addSeries(String title, int color, boolean mainLine) {
+		prepareSeries(color, mainLine);
+		XYSeries series = new XYSeries(title);
+		dataset.addSeries(series);
+		return series;
+	}
 
-    private void addDataToSeriesIfNotNull(XYSeries series, long time, Double value) {
-        if (value != null && value > 0) {
-            series.add(time, value);
-        }
-    }
+	private XYMultipleSeriesRenderer initChart() {
+		XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer();
+		renderer.setXLabels(8);
+		renderer.setYLabels(12);
+		renderer.setXTitle("@");
+		renderer.setYTitle("$");
+		renderer.setShowGrid(true);
+		renderer.setXAxisMin(System.currentTimeMillis() - ONE_DAY_IN_MS - PADDING_MS);
+		renderer.setXAxisMax(System.currentTimeMillis() + PADDING_MS);
+		return renderer;
+	}
 
-    private XYSeries addSeries(String title, int color, boolean mainLine) {
-        prepareSeries(color, mainLine);
-        XYSeries series = new XYSeries(title);
-        dataset.addSeries(series);
-        return series;
-    }
+	private XYSeriesRenderer prepareSeries(int color, boolean mainLine) {
+		XYSeriesRenderer seriesRenderer = new XYSeriesRenderer();
+		seriesRenderer.setColor(color);
+		if(mainLine) {
+			seriesRenderer.setLineWidth(2);
+		} else {
+			seriesRenderer.setLineWidth(1);
+		}
+		renderer.addSeriesRenderer(seriesRenderer);
+		return seriesRenderer;
+	}
 
+	@Override
+	protected void onResume() {
+		super.onResume();
+		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
+		if(emptyChart) {
+			TextView tview = new TextView(this);
+			tview.setText(R.string.empty_graph);
+			layout.addView(tview, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		} else {
+			chartView = ChartFactory.getTimeChartView(this, dataset, renderer, "HH:mm");
+			layout.addView(chartView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		}
+	}
 
-    private XYMultipleSeriesRenderer initChart() {
-        XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer();
-        renderer.setXLabels(8);
-        renderer.setYLabels(12);
-        renderer.setXTitle("@");
-        renderer.setYTitle("$");
-        renderer.setShowGrid(true);
-        renderer.setXAxisMin(System.currentTimeMillis() - ONE_DAY_IN_MS - PADDING_MS);
-        renderer.setXAxisMax(System.currentTimeMillis() + PADDING_MS);
-        return renderer;
-    }
+	// http://developer.android.com/guide/topics/ui/menus.html
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.graph_menu, menu);
+		return true;
+	}
 
-    private XYSeriesRenderer prepareSeries(int color, boolean mainLine) {
-        XYSeriesRenderer seriesRenderer = new XYSeriesRenderer();
-        seriesRenderer.setColor(color);
-        if (mainLine) {
-            //seriesRenderer.setPointStyle(PointStyle.CIRCLE);
-            //seriesRenderer.setFillPoints(true);
-            seriesRenderer.setLineWidth(2);
-        } else {
-            seriesRenderer.setLineWidth(1);
-        }
-        renderer.addSeriesRenderer(seriesRenderer);
-        return seriesRenderer;
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-//      if (chartView == null) {
-        LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
-        if (emptyChart) {
-            TextView tview = new TextView(this);
-            tview.setText(R.string.empty_graph);
-            layout.addView(tview, new LayoutParams(LayoutParams.FILL_PARENT,
-                    LayoutParams.FILL_PARENT));
-        } else {
-
-            chartView = ChartFactory.getTimeChartView(this, dataset, renderer, "HH:mm");
-            layout.addView(chartView, new LayoutParams(LayoutParams.FILL_PARENT,
-                    LayoutParams.FILL_PARENT));
-
-        }
-//      } else if (chartView != null) {
-//        chartView.repaint();
-//      }
-    }
-
-//    @Override
-//    protected void onRestoreInstanceState(Bundle savedState) {
-//      super.onRestoreInstanceState(savedState);
-//      dataset = (XYMultipleSeriesDataset) savedState.getSerializable("dataset");
-//      renderer = (XYMultipleSeriesRenderer) savedState.getSerializable("renderer");
-//      currentSeries = (XYSeries) savedState.getSerializable("current_series");
-//      currentRenderer = (XYSeriesRenderer) savedState.getSerializable("current_renderer");
-//    }
-//
-//    @Override
-//    protected void onSaveInstanceState(Bundle outState) {
-//      super.onSaveInstanceState(outState);
-//      outState.putSerializable("dataset", dataset);
-//      outState.putSerializable("renderer", renderer);
-//      outState.putSerializable("current_series", currentSeries);
-//      outState.putSerializable("current_renderer", currentRenderer);
-//    }
-
-
-    // http://developer.android.com/guide/topics/ui/menus.html
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.graph_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.refreshMenu:
-                finish();
-                String toastText = "Refreshing rate from " +
-                        MtGoxPreferences.getRateService(this,appWidgetId).getName()+ "...";
-                Toast.makeText(this, toastText, Toast.LENGTH_LONG).show();
-                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-                MtGoxWidgetProvider.updateAppWidget(this, appWidgetManager, appWidgetId);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		Log.d(Constants.TAG, "GraphPopupActivity.onOptionsItemSelected: ");
+		if(item.getItemId() == R.id.refreshMenu) {
+			finish();
+			String toastText = "Refreshing rate from " + MtGoxPreferences.getRateService(this, appWidgetId).getName() + "...";
+			Toast.makeText(this, toastText, Toast.LENGTH_LONG).show();
+			AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+			MtGoxWidgetProvider.updateAppWidget(this, appWidgetManager, appWidgetId);
+			return true;
+		} else {
+			return super.onOptionsItemSelected(item);
+		}
+	}
 }

@@ -19,89 +19,77 @@ package st.brothas.mtgoxwidget;
 
 import java.util.Date;
 
-
-/**
- *
- */
 public class MtGoxTickerData {
+	private RateService rateService;
+	private Double last;
+	private Double low;
+	private Double high;
+	private Double buy;
+	private Double sell;
+	private Date timestamp;
 
-    private RateService rateService;
-    private Double last;
-    private Double low;
-    private Double high;
-    private Double buy;
-    private Double sell;
-    private Date timestamp;
+	public MtGoxTickerData() {
+		timestamp = new Date();
+	}
 
-    public MtGoxTickerData() {
-        timestamp = new Date();
-    }
+	public Double getLast() {
+		return last;
+	}
 
-    public Double getLast() {
-        return last;
-    }
+	public void setLast(Double last) {
+		this.last = last;
+	}
 
-    public void setLast(Double last) {
-        this.last = last;
-    }
+	public Double getLow() {
+		return low;
+	}
 
-    public Double getLow() {
-        return low;
-    }
+	public void setLow(Double low) {
+		this.low = low;
+	}
 
-    public void setLow(Double low) {
-        this.low = low;
-    }
+	public Double getHigh() {
+		return high;
+	}
 
-    public Double getHigh() {
-        return high;
-    }
+	public void setHigh(Double high) {
+		this.high = high;
+	}
 
-    public void setHigh(Double high) {
-        this.high = high;
-    }
+	public Double getBuy() {
+		return buy;
+	}
 
-    public Double getBuy() {
-        return buy;
-    }
+	public void setBuy(Double buy) {
+		this.buy = buy;
+	}
 
-    public void setBuy(Double buy) {
-        this.buy = buy;
-    }
+	public Double getSell() {
+		return sell;
+	}
 
-    public Double getSell() {
-        return sell;
-    }
+	public void setSell(Double sell) {
+		this.sell = sell;
+	}
 
-    public void setSell(Double sell) {
-        this.sell = sell;
-    }
+	public Date getTimestamp() {
+		return timestamp;
+	}
 
-    public Date getTimestamp() {
-        return timestamp;
-    }
+	public void setTimestamp(Date timestamp) {
+		this.timestamp = timestamp;
+	}
 
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
+	public RateService getRateService() {
+		return rateService;
+	}
 
-    public RateService getRateService() {
-        return rateService;
-    }
+	public void setRateService(RateService rateService) {
+		this.rateService = rateService;
+	}
 
-    public void setRateService(RateService rateService) {
-        this.rateService = rateService;
-    }
-
-    @Override
-    public String toString() {
-        return "MtGoxTickerData{" +
-                "buy=" + buy +
-                ", last=" + last +
-                ", low=" + low +
-                ", high=" + high +
-                ", sell=" + sell +
-                ", timestamp=" + timestamp +
-                '}';
-    }
+	@Override
+	public String toString() {
+		return "MtGoxTickerData{" + "buy=" + buy + ", last=" + last + ", low=" + low + ", high=" + high + ", sell=" + sell + ", timestamp=" + timestamp + '}';
+	}
 }

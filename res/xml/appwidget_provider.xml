@@ -7,4 +7,3 @@
     android:configure="st.brothas.mtgoxwidget.MtGoxPreferences"
     android:updatePeriodMillis="1800000">
 </appwidget-provider>
-
