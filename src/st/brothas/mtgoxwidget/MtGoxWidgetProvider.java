@@ -106,17 +106,17 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 
 		views.setTextViewText(R.id.appwidget_last, "$" + lastRounded);
 		views.setTextColor(R.id.appwidget_updated, Color.parseColor("#cccccc"));
+		// If we have no previous data, set standard color
+		int lastTextColor = Color.YELLOW;
 		if(newData.getTimestamp().before(getDateMinutesAgo(DATA_IS_CONSIDERED_OLD_AFTER_MINUTES))) {
 			// Data is old, show it by "old" and "warning" colors
-			views.setTextColor(R.id.appwidget_last, Color.GRAY);
+			lastTextColor = Color.GRAY;
 			views.setTextColor(R.id.appwidget_updated, Color.RED);
 		} else if(prevData != null) {
 			// We have previous data, compare to get the color
-			views.setTextColor(R.id.appwidget_last, getColorFromValueChange(prevData.getLast(), newData.getLast()));
-		} else {
-			// No previous data, set standard color
-			views.setTextColor(R.id.appwidget_last, Color.YELLOW);
+			lastTextColor = getColorFromValueChange(prevData.getLast(), newData.getLast());
 		}
+		views.setTextColor(R.id.appwidget_last, lastTextColor);
 		views.setTextViewText(R.id.appwidget_high, highRounded);
 		views.setTextViewText(R.id.appwidget_low, lowRounded);
 		views.setTextViewText(R.id.appwidget_updated, updated);
@@ -147,7 +147,7 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 		} else if(prevValue < nowValue) {
 			return Color.GREEN;
 		} else {
-			return Color.RED;
+			return Color.rgb(255, 50, 50);
 		}
 	}
 
