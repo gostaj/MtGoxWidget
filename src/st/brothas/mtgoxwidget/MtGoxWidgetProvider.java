@@ -43,6 +43,8 @@ import android.util.Log;
 import android.widget.RemoteViews;
 
 public class MtGoxWidgetProvider extends AppWidgetProvider {
+	// Color.RED was too dark. Maybe with the bigger font it would do again.
+	private static final int RED = Color.rgb(255, 50, 50);
 	private static final SimpleDateFormat dateFormat = new SimpleDateFormat("E HH:mm");
 	private static final int DATA_IS_CONSIDERED_OLD_AFTER_MINUTES = 60;
 
@@ -105,13 +107,13 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 		String highRounded = round(2, newData.getHigh());
 
 		views.setTextViewText(R.id.appwidget_last, "$" + lastRounded);
-		views.setTextColor(R.id.appwidget_updated, Color.parseColor("#cccccc"));
+		views.setTextColor(R.id.appwidget_updated, Color.LTGRAY);
 		// If we have no previous data, set standard color
 		int lastTextColor = Color.YELLOW;
 		if(newData.getTimestamp().before(getDateMinutesAgo(DATA_IS_CONSIDERED_OLD_AFTER_MINUTES))) {
 			// Data is old, show it by "old" and "warning" colors
-			lastTextColor = Color.GRAY;
-			views.setTextColor(R.id.appwidget_updated, Color.RED);
+			lastTextColor = Color.LTGRAY;
+			views.setTextColor(R.id.appwidget_updated, RED);
 		} else if(newData.getVwap() != null) {
 			// We have https://en.wikipedia.org/wiki/VWAP to compare to get the
 			// color
@@ -128,9 +130,9 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 
 	private static void updateViewsWithError(RemoteViews views) {
 		views.setTextViewText(R.id.appwidget_last, "N/A");
-		views.setTextColor(R.id.appwidget_last, Color.RED);
+		views.setTextColor(R.id.appwidget_last, RED);
 		views.setTextViewText(R.id.appwidget_updated, "@ " + dateFormat.format(new Date()));
-		views.setTextColor(R.id.appwidget_updated, Color.parseColor("#cccccc"));
+		views.setTextColor(R.id.appwidget_updated, Color.LTGRAY);
 	}
 
 	private static Date getDateMinutesAgo(int minutes) {
@@ -151,7 +153,7 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 		} else if(averageValue < nowValue) {
 			return Color.GREEN;
 		} else {
-			return Color.rgb(255, 50, 50);
+			return RED;
 		}
 	}
 
