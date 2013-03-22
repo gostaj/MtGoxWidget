@@ -11,7 +11,7 @@ import static st.brothas.mtgoxwidget.MtGoxTickerUtil.getJSONTickerKeyFromObject;
 import static st.brothas.mtgoxwidget.MtGoxTickerUtil.tryToParseDouble;
 
 public enum RateService {
-    MTGOX     (1, "Mt Gox", "https://mtgox.com/code/data/ticker.php"),
+    MTGOX     (1, "Mt Gox", "https://data.mtgox.com/code/data/ticker.php"),
     TRADEHILL (2, "TradeHill", "https://api.tradehill.com/APIv1/USD/Ticker"),
     // TradeHill shut down trading February 13, 2012.
     CAMPBX (3, "Camp BX", "http://campbx.com/api/xticker.php"),
