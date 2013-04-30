@@ -34,5 +34,5 @@
     </application>
    <uses-sdk
         android:minSdkVersion="3"
-        android:targetSdkVersion="16" />
+        android:targetSdkVersion="17" />
 </manifest> 

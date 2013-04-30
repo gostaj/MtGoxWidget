@@ -39,6 +39,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -51,17 +52,35 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 		Log.d(Constants.TAG, "MtGoxWidgetProvider.onUpdate: ");
-		final int n = appWidgetIds.length;
-		for(int i = 0; i < n; i++) {
-			int appWidgetId = appWidgetIds[i];
-			updateAppWidget(context, appWidgetManager, appWidgetId);
+		new UpdateAsyncTask(context, appWidgetManager, appWidgetIds).execute();
+	}
+
+	private class UpdateAsyncTask extends AsyncTask<Void, Void, Void> {
+		private Context context;
+		private AppWidgetManager appWidgetManager;
+		private int[] appWidgetIds;
+
+		public UpdateAsyncTask(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+			this.context = context;
+			// TODO Auto-generated constructor stub
+			this.appWidgetManager = appWidgetManager;
+			this.appWidgetIds = appWidgetIds;
+		}
+
+		@Override
+		protected Void doInBackground(Void... bla) {
+			// TODO Auto-generated method stub
+			for (int id : appWidgetIds) {
+				updateAppWidget(context, appWidgetManager, id);
+			}
+			return null;
 		}
 	}
 
 	public static void updateAppWidget(final Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
 		Log.d(Constants.TAG, "MtGoxWidgetProvider.updateAppWidget: ");
 		RateService rateService = MtGoxPreferences.getRateService(context, appWidgetId);
-		if(rateService == null) {
+		if (rateService == null) {
 			// Don't do anything unless the rate service has been chosen.
 			// Show a "please remove this widget and add a new one"
 			appWidgetManager.updateAppWidget(appWidgetId, new RemoteViews(context.getPackageName(), R.layout.appwidget_replace_me));
@@ -85,12 +104,12 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 
 		MtGoxTickerData newData;
 		JSONObject latestQuoteJSON = getLatestQuoteJSON(rateService);
-		if(latestQuoteJSON != null) {
+		if (latestQuoteJSON != null) {
 			Log.d(Constants.TAG, "MtGoxWidgetProvider.updateAppWidget: latestQuoteJSON" + latestQuoteJSON);
 			newData = rateService.parseJSON(latestQuoteJSON);
 			storeLastValueIfNotNull(dbHelper, newData);
 			updateViews(views, prevData, newData);
-		} else if(prevData != null) {
+		} else if (prevData != null) {
 			newData = prevData;
 			updateViews(views, prevData, newData);
 		} else {
@@ -102,25 +121,29 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 	private static void updateViews(RemoteViews views, MtGoxTickerData prevData, MtGoxTickerData newData) {
 		Log.d(Constants.TAG, "MtGoxWidgetProvider.updateViews: ");
 		String updated = "@ " + dateFormat.format(newData.getTimestamp());
-		String lastRounded = round(2, newData.getLast());
-		String lowRounded = round(2, newData.getLow());
-		String highRounded = round(2, newData.getHigh());
+		double last = newData.getLast();
+		double low = newData.getLow();
+		double high = newData.getHigh();
+		int digits = 3 - (int) Math.log10(high);
+		String lastRounded = round(digits, last);
+		String lowRounded = round(digits, low);
+		String highRounded = round(digits, high);
 
 		views.setTextViewText(R.id.appwidget_last, "$" + lastRounded);
 		views.setTextColor(R.id.appwidget_updated, Color.LTGRAY);
 		// If we have no previous data, set standard color
 		int lastTextColor = Color.YELLOW;
-		if(newData.getTimestamp().before(getDateMinutesAgo(DATA_IS_CONSIDERED_OLD_AFTER_MINUTES))) {
+		if (newData.getTimestamp().before(getDateMinutesAgo(DATA_IS_CONSIDERED_OLD_AFTER_MINUTES))) {
 			// Data is old, show it by "old" and "warning" colors
 			lastTextColor = Color.LTGRAY;
 			views.setTextColor(R.id.appwidget_updated, RED);
-		} else if(newData.getVwap() != null) {
+		} else if (newData.getVwap() != null) {
 			// We have https://en.wikipedia.org/wiki/VWAP to compare to get the
 			// color
-			lastTextColor = getColorFromValueChange(newData.getVwap(), newData.getLast());
-		} else if(prevData != null) {
+			lastTextColor = getColorFromValueChange(newData.getVwap(), last);
+		} else if (prevData != null) {
 			// We have previous data to compare to. Lets use it to get the color
-			lastTextColor = getColorFromValueChange(prevData.getLast(), newData.getLast());
+			lastTextColor = getColorFromValueChange(prevData.getLast(), last);
 		}
 		views.setTextColor(R.id.appwidget_last, lastTextColor);
 		views.setTextViewText(R.id.appwidget_high, highRounded);
@@ -140,7 +163,7 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 	}
 
 	private static String round(int decimals, Double value) {
-		if(value != null && value > 0) {
+		if (value != null && value > 0) {
 			return BigDecimal.valueOf(value).setScale(decimals, BigDecimal.ROUND_HALF_UP).toString();
 		} else {
 			return "N/A";
@@ -148,9 +171,9 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 	}
 
 	private static int getColorFromValueChange(Double averageValue, Double nowValue) {
-		if(averageValue == null || nowValue == null || averageValue.equals(nowValue)) {
+		if (averageValue == null || nowValue == null || averageValue.equals(nowValue)) {
 			return Color.YELLOW;
-		} else if(averageValue < nowValue) {
+		} else if (averageValue < nowValue) {
 			return Color.GREEN;
 		} else {
 			return RED;
@@ -158,7 +181,7 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 	}
 
 	private static void storeLastValueIfNotNull(MtGoxDataOpenHelper dbHelper, MtGoxTickerData data) {
-		if(data != null) {
+		if (data != null) {
 			dbHelper.storeTickerData(data);
 			dbHelper.cleanUp();
 		}
@@ -171,18 +194,18 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 			response = HttpManager.execute(httpget);
 			HttpEntity entity = response.getEntity();
 			JSONObject jObject = null;
-			if(entity != null) {
+			if (entity != null) {
 				InputStream instream = entity.getContent();
 				String result = convertStreamToString(instream);
 				jObject = new JSONObject(result);
 				instream.close();
 			}
 			return jObject;
-		} catch(ClientProtocolException e) {
+		} catch (ClientProtocolException e) {
 			Log.e(Constants.TAG, "Error when getting JSON", e);
-		} catch(IOException e) {
+		} catch (IOException e) {
 			Log.e(Constants.TAG, "Error when getting JSON: " + e.getMessage());
-		} catch(JSONException e) {
+		} catch (JSONException e) {
 			Log.e(Constants.TAG, "Error when parsing JSON", e);
 		}
 		return null;
@@ -193,11 +216,11 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 		String line;
 		StringBuilder sb = new StringBuilder();
 		try {
-			while((line = rd.readLine()) != null) {
+			while ((line = rd.readLine()) != null) {
 				sb.append(line);
 			}
 			rd.close();
-		} catch(IOException e) {
+		} catch (IOException e) {
 			Log.e(Constants.TAG, "Error when converting inputstream to string", e);
 		}
 		return sb.toString();
@@ -209,7 +232,7 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 		// with it.
 		Log.d(Constants.TAG, "MtGoxWidgetProvider.onDeleted: ");
 		final int n = appWidgetIds.length;
-		for(int i = 0; i < n; i++) {
+		for (int i = 0; i < n; i++) {
 			MtGoxPreferences.deletePrefs(context, appWidgetIds[i]);
 		}
 	}
