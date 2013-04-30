@@ -61,14 +61,14 @@ public class GraphPopupActivity extends Activity {
 		Log.d(Constants.TAG, "GraphPopupActivity.onCreate: ");
 
 		Bundle extras = getIntent().getExtras();
-		if(extras != null) {
+		if (extras != null) {
 			appWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
 		}
 
 		MtGoxDataOpenHelper db = new MtGoxDataOpenHelper(this);
 		RateService rateService = MtGoxPreferences.getRateService(this, appWidgetId);
 		List<MtGoxTickerData> tickerData = db.getTickerData(System.currentTimeMillis() - ONE_DAY_IN_MS, rateService);
-		if(tickerData.size() > 0) {
+		if (tickerData.size() > 0) {
 			setupChart(tickerData);
 			emptyChart = false;
 		} else {
@@ -90,7 +90,7 @@ public class GraphPopupActivity extends Activity {
 		XYSeries sellSeries = addSeries(getString(R.string.sell), Color.parseColor("#AAFFAA"), false);
 		XYSeries buySeries = addSeries(getString(R.string.buy), Color.parseColor("#FFAAAA"), false);
 		XYSeries lastSeries = addSeries(getString(R.string.last), Color.WHITE, true);
-		for(MtGoxTickerData data : dataList) {
+		for (MtGoxTickerData data : dataList) {
 			addDataToSeriesIfNotNull(highSeries, data.getTimestamp().getTime(), data.getHigh());
 			addDataToSeriesIfNotNull(lowSeries, data.getTimestamp().getTime(), data.getLow());
 			addDataToSeriesIfNotNull(sellSeries, data.getTimestamp().getTime(), data.getSell());
@@ -100,7 +100,7 @@ public class GraphPopupActivity extends Activity {
 	}
 
 	private void addDataToSeriesIfNotNull(XYSeries series, long time, Double value) {
-		if(value != null && value > 0) {
+		if (value != null && value > 0) {
 			series.add(time, value);
 		}
 	}
@@ -127,7 +127,7 @@ public class GraphPopupActivity extends Activity {
 	private XYSeriesRenderer prepareSeries(int color, boolean mainLine) {
 		XYSeriesRenderer seriesRenderer = new XYSeriesRenderer();
 		seriesRenderer.setColor(color);
-		if(mainLine) {
+		if (mainLine) {
 			seriesRenderer.setLineWidth(2);
 		} else {
 			seriesRenderer.setLineWidth(1);
@@ -140,7 +140,7 @@ public class GraphPopupActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
-		if(emptyChart) {
+		if (emptyChart) {
 			TextView tview = new TextView(this);
 			tview.setText(R.string.empty_graph);
 			layout.addView(tview, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -161,12 +161,12 @@ public class GraphPopupActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		Log.d(Constants.TAG, "GraphPopupActivity.onOptionsItemSelected: ");
-		if(item.getItemId() == R.id.refreshMenu) {
+		if (item.getItemId() == R.id.refreshMenu) {
 			finish();
 			String toastText = "Refreshing rate from " + MtGoxPreferences.getRateService(this, appWidgetId).getName() + "...";
 			Toast.makeText(this, toastText, Toast.LENGTH_LONG).show();
 			AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-			MtGoxWidgetProvider.updateAppWidget(this, appWidgetManager, appWidgetId);
+			MtGoxWidgetProvider.updateAppWidgetAsync(this, appWidgetManager, appWidgetId);
 			return true;
 		}
 		return super.onOptionsItemSelected(item);

@@ -4,7 +4,6 @@ import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -47,13 +46,7 @@ public class MtGoxPreferences extends PreferenceActivity {
 				Log.d(Constants.TAG, "MtGoxPreferences.onCreate(...).new OnPreferenceClickListener() {...}.onPreferenceClick: ");
 				updateWidgetWithWaitMessage(appWidgetId);
 				setServicePreference(appWidgetId, selectedRateService);
-				new AsyncTask<Integer, Void, Void>() {
-					@Override
-					protected Void doInBackground(Integer... params) {
-						startWidget(params[0]);
-						return null;
-					}
-				}.execute(appWidgetId);
+				startWidget(appWidgetId);
 				return true;
 			}
 		});
@@ -71,7 +64,7 @@ public class MtGoxPreferences extends PreferenceActivity {
 		finish();
 
 		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-		MtGoxWidgetProvider.updateAppWidget(this, appWidgetManager, appWidgetId);
+		MtGoxWidgetProvider.updateAppWidgetAsync(this, appWidgetManager, appWidgetId);
 	}
 
 	private void updateServicePreferenceSummary(Preference servicePref) {

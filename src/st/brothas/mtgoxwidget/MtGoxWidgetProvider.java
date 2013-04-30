@@ -52,10 +52,10 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 		Log.d(Constants.TAG, "MtGoxWidgetProvider.onUpdate: ");
-		new UpdateAsyncTask(context, appWidgetManager, appWidgetIds).execute();
+		updateAppWidgetAsync(context, appWidgetManager, appWidgetIds);
 	}
 
-	private class UpdateAsyncTask extends AsyncTask<Void, Void, Void> {
+	private static class UpdateAsyncTask extends AsyncTask<Void, Void, Void> {
 		private Context context;
 		private AppWidgetManager appWidgetManager;
 		private int[] appWidgetIds;
@@ -75,7 +75,15 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 		}
 	}
 
-	public static void updateAppWidget(final Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+	public static void updateAppWidgetAsync(final Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+		updateAppWidgetAsync(context, appWidgetManager, new int[] { appWidgetId });
+	}
+
+	public static void updateAppWidgetAsync(final Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+		new UpdateAsyncTask(context, appWidgetManager, appWidgetIds).execute();
+	}
+
+	private static void updateAppWidget(final Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
 		Log.d(Constants.TAG, "MtGoxWidgetProvider.updateAppWidget: ");
 		RateService rateService = MtGoxPreferences.getRateService(context, appWidgetId);
 		if (rateService == null) {
