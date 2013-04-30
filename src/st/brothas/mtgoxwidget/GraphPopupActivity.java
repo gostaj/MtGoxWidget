@@ -56,10 +56,14 @@ public class GraphPopupActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle bundle) {
-		Log.d(Constants.TAG, "GraphPopupActivity.onCreate: ");
 		super.onCreate(bundle);
+		long t = System.currentTimeMillis();
+		Log.d(Constants.TAG, "GraphPopupActivity.onCreate: ");
 
-		appWidgetId = getIntent().getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
+		Bundle extras = getIntent().getExtras();
+		if(extras != null) {
+			appWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
+		}
 
 		MtGoxDataOpenHelper db = new MtGoxDataOpenHelper(this);
 		RateService rateService = MtGoxPreferences.getRateService(this, appWidgetId);
@@ -75,6 +79,7 @@ public class GraphPopupActivity extends Activity {
 
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND, WindowManager.LayoutParams.FLAG_DIM_BEHIND);
 		setContentView(R.layout.popup_graph_layout);
+		Log.d(Constants.TAG, "GraphPopupActivity.onCreate: took " + (System.currentTimeMillis() - t) + "ms to create.");
 	}
 
 	private void setupChart(List<MtGoxTickerData> dataList) {
