@@ -4,14 +4,14 @@ import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.util.Log;
 
 /**
- * http://www.kaloer.com/android-preferences
- * http://www.vogella.de/articles/Android/article.html#preferences
+ * http://www.kaloer.com/android-preferences http://www.vogella.de/articles/Android/article.html#preferences
  */
 public class MtGoxPreferences extends PreferenceActivity {
 	private static final String SERVICE_KEY = "service";
@@ -47,7 +47,13 @@ public class MtGoxPreferences extends PreferenceActivity {
 				Log.d(Constants.TAG, "MtGoxPreferences.onCreate(...).new OnPreferenceClickListener() {...}.onPreferenceClick: ");
 				updateWidgetWithWaitMessage(appWidgetId);
 				setServicePreference(appWidgetId, selectedRateService);
-				startWidget(appWidgetId);
+				new AsyncTask<Integer, Void, Void>() {
+					@Override
+					protected Void doInBackground(Integer... params) {
+						startWidget(params[0]);
+						return null;
+					}
+				}.execute(appWidgetId);
 				return true;
 			}
 		});
@@ -75,7 +81,7 @@ public class MtGoxPreferences extends PreferenceActivity {
 	private int getAppWidgetId() {
 		Intent intent = getIntent();
 		Bundle extras = intent.getExtras();
-		if(extras != null) {
+		if (extras != null) {
 			return extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
 		} else {
 			Log.e("mtgox", "AppWidgetId not found!");
@@ -95,7 +101,7 @@ public class MtGoxPreferences extends PreferenceActivity {
 	public static RateService getRateService(Context context, int appWidgetId) {
 		Log.d(Constants.TAG, "MtGoxPreferences.getRateService: ");
 		SharedPreferences sharedPreferences = context.getSharedPreferences("" + appWidgetId, Context.MODE_PRIVATE);
-		if(sharedPreferences.contains(SERVICE_KEY)) {
+		if (sharedPreferences.contains(SERVICE_KEY)) {
 			String serviceName = sharedPreferences.getString(SERVICE_KEY, RateService.getDefaultService().name());
 			return RateService.valueOf(serviceName);
 		} else {

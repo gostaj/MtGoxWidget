@@ -62,14 +62,12 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 
 		public UpdateAsyncTask(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 			this.context = context;
-			// TODO Auto-generated constructor stub
 			this.appWidgetManager = appWidgetManager;
 			this.appWidgetIds = appWidgetIds;
 		}
 
 		@Override
 		protected Void doInBackground(Void... bla) {
-			// TODO Auto-generated method stub
 			for (int id : appWidgetIds) {
 				updateAppWidget(context, appWidgetManager, id);
 			}
