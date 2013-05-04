@@ -13,12 +13,12 @@ import org.json.JSONObject;
 import android.util.Log;
 
 public enum RateService {
-	MTGOX(1, "Mt Gox", "https://mtgox.com/code/data/ticker.php"), TRADEHILL(2, "TradeHill", "https://api.tradehill.com/APIv1/USD/Ticker"),
+	MTGOX(1, "Mt Gox", "https://data.mtgox.com/code/data/ticker.php"), TRADEHILL(2, "TradeHill", "https://api.tradehill.com/APIv1/USD/Ticker"),
 	// TradeHill shut down trading February 13, 2012.
 	CAMPBX(3, "Camp BX", "http://campbx.com/api/xticker.php"), EXCHB(4, "ExchB", "https://www.exchangebitcoins.com/data/ticker"),
 	// ExchB is closed since October 16, 2011.
-	BITFLOOR(5, "Bitfloor", "https://api.bitfloor.com/ticker/1"), BITSTAMP(6, "Bitstamp", "https://www.bitstamp.net/api/ticker/"), CRYPTOXCHANGE(7, "Crypto X Change",
-			"http://cryptoxchange.com/api/v0/data/BTCUSD/ticker");
+	BITFLOOR(5, "Bitfloor", "https://api.bitfloor.com/ticker/1"), BITSTAMP(6, "Bitstamp", "https://www.bitstamp.net/api/ticker/"), CRYPTOXCHANGE(7,
+			"Crypto X Change", "http://cryptoxchange.com/api/v0/data/BTCUSD/ticker");
 
 	private final int id;
 	private final String name;
@@ -35,7 +35,7 @@ public enum RateService {
 	}
 
 	static {
-		for(RateService s : EnumSet.allOf(RateService.class)) {
+		for (RateService s : EnumSet.allOf(RateService.class)) {
 			lookup.put(s.getId(), s);
 		}
 	}
@@ -45,7 +45,7 @@ public enum RateService {
 		MtGoxTickerData tickerData = new MtGoxTickerData();
 
 		tickerData.setRateService(this);
-		switch(this) {
+		switch (this) {
 		case CAMPBX:
 			// {"Last Trade":"11.75","Best Bid":"11.40","Best Ask":"11.67"}
 			tickerData.setLast(tryToParseDouble(getJSONTickerKey(json, "Last Trade")));
