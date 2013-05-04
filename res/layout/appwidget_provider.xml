@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:id="@+id/appwidget_box"
               android:background="@drawable/my_border"
@@ -8,47 +7,44 @@
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
               android:padding="3dp">
-
     <!-- Top row -->
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                   android:orientation="horizontal"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   android:textColor="#ffffff">
-
         <TextView
                 android:id="@+id/appwidget_low"
+                android:text="@string/_0"
                 android:gravity="left"
-                android:textSize="5pt"
+                android:textSize="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"/>
-
         <TextView
                 android:id="@+id/appwidget_high"
+                android:text="@string/_0"
                 android:gravity="right"
-                android:textSize="5pt"
+                android:textSize="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"/>
     </LinearLayout>
-
     <!-- Last value -->
     <TextView
-            android:id="@+id/appwidget_last"
-            android:gravity="center"
-            android:textSize="9pt"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#aa5555"/>
-
+        android:id="@+id/appwidget_last"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/_0"
+        android:textColor="#aa5555"
+        android:textSize="17dp" />
     <!-- Layout for logo and service name -->
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                   android:gravity="center_horizontal"
                   android:orientation="horizontal"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content">
-
         <!-- Bitcoin logo -->
         <ImageView
                 android:gravity="left"
@@ -56,33 +52,28 @@
                 android:layout_height="30dp"
                 android:adjustViewBounds="true"
                 android:src="@drawable/bc_logo_30"/>
-
         <!-- Service name -->
         <TextView
                 android:id="@+id/appwidget_service_name"
+                android:text="@string/_0"
                 android:gravity="center_vertical"
-                android:textSize="5pt"
+                android:textSize="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:textColor="#ffffff"/>
-
     </LinearLayout>
-
     <!-- Bottom row -->
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                   android:gravity="center_horizontal"
                   android:layout_width="wrap_content"
                   android:layout_height="fill_parent">
-
         <TextView
                 android:id="@+id/appwidget_updated"
+                android:text="@string/_0"
                 android:gravity="bottom"
-                android:textSize="5pt"
+                android:textSize="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:textColor="#cccccc"/>
-
     </LinearLayout>
-
 </LinearLayout>
-

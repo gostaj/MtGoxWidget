@@ -11,43 +11,39 @@ import java.security.UnrecoverableKeyException;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
-import android.util.Log;
 import org.apache.http.conn.scheme.SocketFactory;
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.conn.ssl.SSLSocketFactory;
-import st.brothas.mtgoxwidget.MtGoxWidgetProvider;
 
+import st.brothas.mtgoxwidget.Constants;
+import android.util.Log;
 
 /*
  * Taken from: http://meneameandroid.googlecode.com/svn/trunk/src/com/dcg/auth/TrustAllSSLSocketFactory.java
  * Big thanks to B.Thax.DCG and pakore!
- *
  */
 public class TrustAllSSLSocketFactory extends SSLSocketFactory {
 	private javax.net.ssl.SSLSocketFactory factory;
 
-	public TrustAllSSLSocketFactory() throws KeyManagementException,
-			NoSuchAlgorithmException, KeyStoreException,
-			UnrecoverableKeyException {
+	public TrustAllSSLSocketFactory() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException {
 		super(null);
 		try {
 			SSLContext sslcontext = SSLContext.getInstance("TLS");
-			sslcontext.init(null, new TrustManager[] { new TrustAllManager() },
-					null);
+			sslcontext.init(null, new TrustManager[] { new TrustAllManager() }, null);
 			factory = sslcontext.getSocketFactory();
 			setHostnameVerifier(new AllowAllHostnameVerifier());
-		} catch (Exception e) {
-            Log.e(MtGoxWidgetProvider.LOG_TAG, "Error when creating SSL socket factory", e);
+		} catch(Exception e) {
+			Log.e(Constants.TAG, "Error when creating SSL socket factory", e);
 		}
 	}
 
 	public static SocketFactory getDefault() {
-        try {
-		    return new TrustAllSSLSocketFactory();
-        } catch (Exception e) {
-            Log.e(MtGoxWidgetProvider.LOG_TAG, "Error when creating SSL socket factory", e);
-            throw new RuntimeException("Error when creating SSL socket factory", e);
-        }
+		try {
+			return new TrustAllSSLSocketFactory();
+		} catch(Exception e) {
+			Log.e(Constants.TAG, "Error when creating SSL socket factory", e);
+			throw new RuntimeException("Error when creating SSL socket factory", e);
+		}
 	}
 
 	@Override
@@ -56,13 +52,11 @@ public class TrustAllSSLSocketFactory extends SSLSocketFactory {
 	}
 
 	@Override
-	public Socket createSocket(Socket socket, String s, int i, boolean flag)
-			throws IOException {
+	public Socket createSocket(Socket socket, String s, int i, boolean flag) throws IOException {
 		return factory.createSocket(socket, s, i, flag);
 	}
 
-	public Socket createSocket(InetAddress inaddr, int i, InetAddress inaddr1,
-			int j) throws IOException {
+	public Socket createSocket(InetAddress inaddr, int i, InetAddress inaddr1, int j) throws IOException {
 		return factory.createSocket(inaddr, i, inaddr1, j);
 	}
 
@@ -70,8 +64,7 @@ public class TrustAllSSLSocketFactory extends SSLSocketFactory {
 		return factory.createSocket(inaddr, i);
 	}
 
-	public Socket createSocket(String s, int i, InetAddress inaddr, int j)
-			throws IOException {
+	public Socket createSocket(String s, int i, InetAddress inaddr, int j) throws IOException {
 		return factory.createSocket(s, i, inaddr, j);
 	}
 
@@ -87,4 +80,3 @@ public class TrustAllSSLSocketFactory extends SSLSocketFactory {
 		return factory.getSupportedCipherSuites();
 	}
 }
-

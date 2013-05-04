@@ -27,12 +27,10 @@ import org.apache.http.params.HttpProtocolParams;
 /*
  * Taken from: http://meneameandroid.googlecode.com/svn/trunk/src/com/dcg/util/HttpManager.java
  * Big thanks to B.Thax.DCG and pakore!
- *
  */
 public class HttpManager {
 	private static final DefaultHttpClient sClient;
 	static {
-
 		// Set basic data
 		HttpParams params = new BasicHttpParams();
 		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
@@ -56,24 +54,17 @@ public class HttpManager {
 
 		// Register http/s shemas!
 		SchemeRegistry schReg = new SchemeRegistry();
-		schReg.register(new Scheme("http", PlainSocketFactory
-				.getSocketFactory(), 80));
-		schReg.register(new Scheme("https", TrustAllSSLSocketFactory
-                .getDefault(), 443));
-		ClientConnectionManager conMgr = new ThreadSafeClientConnManager(
-				params, schReg);
+		schReg.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+		schReg.register(new Scheme("https", TrustAllSSLSocketFactory.getDefault(), 443));
+		ClientConnectionManager conMgr = new ThreadSafeClientConnManager(params, schReg);
 		sClient = new DefaultHttpClient(conMgr, params);
-	}
-
-	private HttpManager() {
 	}
 
 	public static HttpResponse execute(HttpHead head) throws IOException {
 		return sClient.execute(head);
 	}
 
-	public static HttpResponse execute(HttpHost host, HttpGet get)
-			throws IOException {
+	public static HttpResponse execute(HttpHost host, HttpGet get) throws IOException {
 		return sClient.execute(host, get);
 	}
 
@@ -89,4 +80,3 @@ public class HttpManager {
 		return sClient.getCookieStore();
 	}
 }
-

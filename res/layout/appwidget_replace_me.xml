@@ -14,7 +14,7 @@
             android:id="@+id/appwidget_info"
             android:gravity="center"
             android:text="@string/appwidget_replace_text"
-            android:textSize="5pt"
+            android:textSize="10dp"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textColor="#ffffff"/>

@@ -9,5 +9,6 @@
     <string name="buy">Buy</string>
     <string name="sell">Sell</string>
     <string name="appwidget_replace_text">Replace me with a new Bitcoin Widget</string>
-    <string name="appwidget_loading_text">Loading data...</string>
+    <string name="appwidget_loading_text">Loading data …</string>
+    <string name="_0">Lorem ipsum</string>
 </resources>
