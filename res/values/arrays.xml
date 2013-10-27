@@ -2,16 +2,22 @@
     <string-array name="serviceList">
         <item>Mt Gox</item>
         <item>Camp BX</item>
-        <item>Bitfloor</item>
         <item>Bitstamp</item>
         <item>Crypto X Change</item>
+        <item>BTC-e</item>
     </string-array>
 
     <string-array name="serviceValues">
         <item>MTGOX</item>
         <item>CAMPBX</item>
-        <item>BITFLOOR</item>
         <item>BITSTAMP</item>
         <item>CRYPTOXCHANGE</item>
+        <item>BTCE</item>
     </string-array>
+
+    <string-array name="colorModeList">
+        <item>Default</item>
+        <item>Grayscale</item>
+    </string-array>
+
 </resources>

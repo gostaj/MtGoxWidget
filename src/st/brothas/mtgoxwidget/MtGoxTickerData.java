@@ -26,6 +26,7 @@ import java.util.Date;
 public class MtGoxTickerData {
 
     private RateService rateService;
+    private CurrencyConversion currencyConversion;
     private Double last;
     private Double low;
     private Double high;
@@ -91,6 +92,14 @@ public class MtGoxTickerData {
 
     public void setRateService(RateService rateService) {
         this.rateService = rateService;
+    }
+
+    public CurrencyConversion getCurrencyConversion() {
+        return currencyConversion;
+    }
+
+    public void setCurrencyConversion(CurrencyConversion currencyConversion) {
+        this.currencyConversion = currencyConversion;
     }
 
     @Override

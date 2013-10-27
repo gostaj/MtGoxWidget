@@ -28,15 +28,28 @@ import static st.brothas.mtgoxwidget.MtGoxWidgetProvider.LOG_TAG;
   */
 public class MtGoxTickerUtil {
 
-    public static String getJSONTickerKeyFromObject(JSONObject json, String objectName, String key) {
+    // TODO: Change to one method with "String... objects"
+    public static String getJSONTickerKeyFromObjects(JSONObject json, String objectNameLevel1, String objectNameLevel2,
+                                                     String key) {
         JSONObject tickerObject;
 		try {
-			tickerObject = json.getJSONObject(objectName);
+			tickerObject = json.getJSONObject(objectNameLevel1).getJSONObject(objectNameLevel2);
 			return tickerObject.getString(key);
 		} catch (JSONException e) {
-			Log.e(LOG_TAG, "Error when getting JSON key: '" + key + "' from json: '" + json + "'", e);
+			Log.e(LOG_TAG, "Error when getting JSON object1: '" + objectNameLevel1 + "', object2: '" + objectNameLevel2 +
+                    "'," + " key: '" + key + "', from json: '" + json + "'", e);
 		}
 		return "N/A";
+    }
+
+    public static String getJSONTickerKeyFromObject(JSONObject json, String objectName, String key) {
+        try {
+            return json.getJSONObject(objectName).getString(key);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error when getting JSON object: '" + objectName + "'," + " key: '" + key +
+                    "', from json: '" + json + "'", e);
+        }
+        return "N/A";
     }
 
     public static String getJSONTickerKey(JSONObject json, String key) {

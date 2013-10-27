@@ -33,10 +33,11 @@ import static st.brothas.mtgoxwidget.MtGoxWidgetProvider.LOG_TAG;
 
 public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 	
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
     private static final String DATABASE_NAME = "mtgox";
     private static final String TICKER_DATA_TABLE_NAME = "ticker_data";
     private static final String COLUMN_SOURCE = "source";
+    private static final String COLUMN_CURRENCY = "currency";
     private static final String COLUMN_TIMESTAMP = "timestamp";
     private static final String COLUMN_HIGH = "high";
     private static final String COLUMN_LOW = "low";
@@ -45,7 +46,8 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
     private static final String COLUMN_SELL = "sell";
     private static final String LAST_TABLE_CREATE =
                 "CREATE TABLE " + TICKER_DATA_TABLE_NAME + " (" +
-                        COLUMN_SOURCE + " INTEGER NOT NULL DEFAULT " + RateService.MTGOX.getId() + ", " +
+                        COLUMN_SOURCE + " INTEGER NOT NULL DEFAULT " + RateService.getDefaultService().getId() + ", " +
+                        COLUMN_CURRENCY + " INTEGER NOT NULL DEFAULT " + CurrencyConversion.getDefault().id + ", " +
                         COLUMN_TIMESTAMP + " INTEGER, " +
                         COLUMN_HIGH + " REAL, " +
                         COLUMN_LOW + " REAL, " +
@@ -60,15 +62,17 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 	private static final String QUERY_LAST_TICKER_DATA =
             "SELECT * FROM " + TICKER_DATA_TABLE_NAME +
             " WHERE " + COLUMN_SOURCE + " = ? " +
+            " AND " + COLUMN_CURRENCY + " = ? " +
             " ORDER BY " + COLUMN_TIMESTAMP + " DESC LIMIT 1;";
 
     private static final String QUERY_NEWEST_TICKER_DATA =
             "SELECT * FROM " + TICKER_DATA_TABLE_NAME +
             " WHERE " + COLUMN_TIMESTAMP + " > ? " +
             " AND " + COLUMN_SOURCE + " = ? " +
+            " AND " + COLUMN_CURRENCY + " = ? " +
             " ORDER BY " + COLUMN_TIMESTAMP + " DESC;";
 
-	private static final Long TIME_TO_KEEP_DATA_IN_SECS = 60*60*25L; // 25 hours
+	private static final Long TIME_TO_KEEP_DATA_IN_SECS = 60*60*24*7L; // 7 days
 
     MtGoxDataOpenHelper(Context context) {
 	        super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -83,20 +87,26 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.i(LOG_TAG, "Upgrading DB from " + oldVersion + " to " + newVersion);
         if (oldVersion == 3) {
-            // Upgrade from DB version 3 to 4
+            // Upgrade from DB version 3
             db.execSQL("ALTER TABLE " + TICKER_DATA_TABLE_NAME +
                     " ADD COLUMN " + COLUMN_SOURCE + " INTEGER NOT NULL DEFAULT " + RateService.MTGOX.getId());
-        } else {
-            db.execSQL("DROP TABLE " + TICKER_DATA_TABLE_NAME);
-            onCreate(db);
         }
+        if (oldVersion >= 3 && oldVersion <=4 ) {
+            // Upgrade from DB version 3 and 4
+            db.execSQL("ALTER TABLE " + TICKER_DATA_TABLE_NAME +
+                    " ADD COLUMN " + COLUMN_CURRENCY + " INTEGER NOT NULL DEFAULT " + CurrencyConversion.getDefault().id);
+        }
+
+        //db.execSQL("DROP TABLE " + TICKER_DATA_TABLE_NAME);
+        //onCreate(db);
 	}
 
 	public void storeTickerData(MtGoxTickerData data) {
 		SQLiteDatabase db = getWritableDatabase();
 		ContentValues values = new ContentValues();
         values.put(COLUMN_SOURCE, data.getRateService().getId());
-		values.put(COLUMN_TIMESTAMP, System.currentTimeMillis()/1000);
+        values.put(COLUMN_CURRENCY, data.getCurrencyConversion().id);
+        values.put(COLUMN_TIMESTAMP, System.currentTimeMillis()/1000);
 		values.put(COLUMN_LOW, data.getLow());
         values.put(COLUMN_HIGH, data.getHigh());
         values.put(COLUMN_LAST, data.getLast());
@@ -122,9 +132,10 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 	}
 
 	// Returns the last last value or null if no values have been stored.
-	public MtGoxTickerData getLastTickerData(RateService rateService) {
+	public MtGoxTickerData getLastTickerData(WidgetPreferences preferences) {
 		SQLiteDatabase db = getReadableDatabase();
-        String[] selection = {rateService.getId().toString()};
+        String[] selection = {preferences.getRateService().getId().toString(),
+                preferences.getCurrencyConversion().id.toString()};
 		Cursor cursor = db.rawQuery(QUERY_LAST_TICKER_DATA, selection);
 		MtGoxTickerData lastData = null;
 		if (cursor.getCount() > 0) {
@@ -140,6 +151,7 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
         MtGoxTickerData lastData;
         lastData = new MtGoxTickerData();
         lastData.setRateService(RateService.getById(cursor.getColumnIndexOrThrow(COLUMN_SOURCE)));
+        lastData.setCurrencyConversion(CurrencyConversion.getById(cursor.getColumnIndexOrThrow(COLUMN_CURRENCY)));
         // Null values will be zeroes. If null is important use cursor.isNull(columnIndex)
         lastData.setLow(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LOW)));
         lastData.setHigh(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_HIGH)));
@@ -159,10 +171,11 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
 		db.close();
 	}
 
-    public List<MtGoxTickerData> getTickerData(Long since, RateService rateService) {
+    public List<MtGoxTickerData> getTickerData(Long since, WidgetPreferences preferences) {
         List<MtGoxTickerData> data = new ArrayList<MtGoxTickerData>();
         SQLiteDatabase db = getReadableDatabase();
-        String[] selection = {String.valueOf(since/1000), rateService.getId().toString()};
+        String[] selection = {String.valueOf(since/1000), preferences.getRateService().getId().toString(),
+                preferences.getCurrencyConversion().id.toString()};
         Cursor cursor = db.rawQuery(QUERY_NEWEST_TICKER_DATA, selection);
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {

@@ -47,8 +47,10 @@ import java.util.Date;
  */
 public class MtGoxWidgetProvider extends AppWidgetProvider {
     public static final String LOG_TAG = "MtGox";
-	private static final SimpleDateFormat dateFormat= new SimpleDateFormat("E HH:mm");
+	private static final SimpleDateFormat dateFormat = new SimpleDateFormat("E HH:mm");
     private static final int DATA_IS_CONSIDERED_OLD_AFTER_MINUTES = 60;
+
+    private enum WidgetColor {Warning, StartValue, Increase, Decrease, Normal}
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -62,8 +64,9 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
     static void updateAppWidget(final Context context, AppWidgetManager appWidgetManager,
             int appWidgetId) {
 
-        RateService rateService = MtGoxPreferences.getRateService(context, appWidgetId);
-        if (rateService == null) {
+        WidgetPreferences preferences = MtGoxPreferencesActivity.getWidgetPreferences(context, appWidgetId);
+
+        if (preferences == null) {
             // Don't do anything unless the rate service has been chosen.
             // Show a "please remove this widget and add a new one"
             appWidgetManager.updateAppWidget(appWidgetId,
@@ -79,76 +82,122 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
         //       cached intent will be used for all widget instances!
         PendingIntent pendingIntent = PendingIntent.getActivity(context, appWidgetId, clickIntent, 0);
         views.setOnClickPendingIntent(R.id.appwidget_box, pendingIntent);
-        views.setTextViewText(R.id.appwidget_service_name, rateService.getName());
+        views.setTextViewText(R.id.appwidget_service_name, preferences.getRateService().getName());
 
         MtGoxDataOpenHelper dbHelper = new MtGoxDataOpenHelper(context);
-        MtGoxTickerData prevData = dbHelper.getLastTickerData(rateService);
+        MtGoxTickerData prevData = dbHelper.getLastTickerData(preferences);
 
         MtGoxTickerData newData;
-        JSONObject latestQuoteJSON = getLatestQuoteJSON(rateService);
+        JSONObject latestQuoteJSON = getLatestQuoteJSON(preferences);
         if (latestQuoteJSON != null) {
-            newData = rateService.parseJSON(latestQuoteJSON);
+            newData = preferences.getRateService().parseJSON(latestQuoteJSON);
+            newData.setCurrencyConversion(preferences.getCurrencyConversion());
             storeLastValueIfNotNull(dbHelper, newData);
-            updateViews(views, prevData, newData);
+            updateViews(views, prevData, newData, preferences);
         } else if (prevData != null) {
             newData = prevData;
-            updateViews(views, prevData, newData);
+            updateViews(views, prevData, newData, preferences);
         } else {
-            updateViewsWithError(views);
+            updateViewsWithError(views, preferences);
         }
         appWidgetManager.updateAppWidget(appWidgetId, views);
    }
 
-    private static void updateViews(RemoteViews views, MtGoxTickerData prevData, MtGoxTickerData newData) {
+    private static void updateViews(RemoteViews views, MtGoxTickerData prevData, MtGoxTickerData newData,
+                                    WidgetPreferences preferences) {
         String updated = "@ " + dateFormat.format(newData.getTimestamp());
-        String lastRounded = round(2, newData.getLast());
-        String lowRounded = round(2, newData.getLow());
-        String highRounded = round(2, newData.getHigh());
+        String lastRounded = round(newData.getLast());
+        String lowRounded = round(newData.getLow());
+        String highRounded = round(newData.getHigh());
 
-        views.setTextViewText(R.id.appwidget_last, "$" + lastRounded);
-        views.setTextColor(R.id.appwidget_updated, Color.parseColor("#cccccc"));
+        views.setTextViewText(R.id.appwidget_last, preferences.getCurrencyConversion().symbol + lastRounded);
+        views.setTextColor(R.id.appwidget_updated, getColor(preferences.getColorMode(), WidgetColor.Normal));
         if (newData.getTimestamp().before(getDateMinutesAgo(DATA_IS_CONSIDERED_OLD_AFTER_MINUTES))) {
             // Data is old, show it by "old" and "warning" colors
             views.setTextColor(R.id.appwidget_last, Color.GRAY);
-            views.setTextColor(R.id.appwidget_updated, Color.RED);
+            views.setTextColor(R.id.appwidget_updated, getColor(preferences.getColorMode(), WidgetColor.Warning));
         } else if (prevData != null) {
             // We have previous data, compare to get the color
-            views.setTextColor(R.id.appwidget_last, getColorFromValueChange(prevData.getLast(), newData.getLast()));
+            views.setTextColor(R.id.appwidget_last, getColorFromValueChange(prevData.getLast(),
+                    newData.getLast(), preferences.getColorMode()));
         } else {
             // No previous data, set standard color
-            views.setTextColor(R.id.appwidget_last, Color.YELLOW);
+            views.setTextColor(R.id.appwidget_last, getColor(preferences.getColorMode(), WidgetColor.StartValue));
         }
         views.setTextViewText(R.id.appwidget_high, highRounded);
         views.setTextViewText(R.id.appwidget_low, lowRounded);
         views.setTextViewText(R.id.appwidget_updated, updated);
     }
 
-    private static void updateViewsWithError(RemoteViews views) {
+    private static void updateViewsWithError(RemoteViews views, WidgetPreferences preferences) {
         views.setTextViewText(R.id.appwidget_last, "N/A");
-        views.setTextColor(R.id.appwidget_last, Color.RED);
+        views.setTextColor(R.id.appwidget_last, getColor(preferences.getColorMode(), WidgetColor.Warning));
         views.setTextViewText(R.id.appwidget_updated, "@ " + dateFormat.format(new Date()));
-        views.setTextColor(R.id.appwidget_updated, Color.parseColor("#cccccc"));
+        views.setTextColor(R.id.appwidget_updated, getColor(preferences.getColorMode(), WidgetColor.Normal));
+    }
+
+    private static int getColor(ColorMode colorMode, WidgetColor widgetColor) {
+        if (colorMode.equals(ColorMode.Default)) {
+            switch(widgetColor) {
+                case Warning:
+                    return Color.parseColor("#ff3030");
+                case StartValue:
+                    return Color.YELLOW;
+                case Normal:
+                    return Color.LTGRAY;
+                case Increase:
+                    return Color.GREEN;
+                case Decrease:
+                    return Color.parseColor("#ff3030");
+                default:
+                    throw new IllegalArgumentException("No color defined for " + widgetColor);
+            }
+        } else if (colorMode.equals(ColorMode.Grayscale)) {
+            switch(widgetColor) {
+                case Warning:
+                    return Color.WHITE;
+                case StartValue:
+                    return Color.LTGRAY;
+                case Normal:
+                    return Color.LTGRAY;
+                case Increase:
+                    return Color.WHITE;
+                case Decrease:
+                    return Color.GRAY;
+                default:
+                    throw new IllegalArgumentException("No color defined for " + widgetColor);
+            }
+        } else {
+            throw new IllegalArgumentException("No color mode defined for " + colorMode);
+        }
     }
 
     private static Date getDateMinutesAgo(int minutes) {
         return new Date(System.currentTimeMillis() - (minutes*60*1000));
     }
 
-    private static String round(int decimals, Double value) {
-        if (value != null && value > 0) {
-            return BigDecimal.valueOf(value).setScale(decimals, BigDecimal.ROUND_HALF_UP).toString();
-        } else {
+    private static String round(Double value) {
+        if (value == null) {
             return "N/A";
         }
+
+        int decimals = 2;
+        if (value >= 1000) {
+            decimals = 0;
+        } else if (value >= 100) {
+            decimals = 1;
+        }
+
+        return BigDecimal.valueOf(value).setScale(decimals, BigDecimal.ROUND_HALF_UP).toString();
     }
 
-    private static int getColorFromValueChange(Double prevValue, Double nowValue) {
+    private static int getColorFromValueChange(Double prevValue, Double nowValue, ColorMode colorMode) {
     	if (prevValue == null || nowValue == null || prevValue.equals(nowValue)) {
-    		return Color.YELLOW;
+    		return getColor(colorMode, WidgetColor.StartValue);
     	} else if (prevValue < nowValue) {
-    		return Color.GREEN;
+    		return getColor(colorMode, WidgetColor.Increase);
     	} else {
-    		return Color.RED;
+    		return getColor(colorMode, WidgetColor.Decrease);
     	}
 	}
 
@@ -160,8 +209,8 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
        }
 	}
 
-    private static JSONObject getLatestQuoteJSON(RateService rateService) {
-        HttpGet httpget = new HttpGet(rateService.getTickerUrl());
+    private static JSONObject getLatestQuoteJSON(WidgetPreferences preferences) {
+        HttpGet httpget = new HttpGet(preferences.getRateService().getTickerUrl(preferences.getCurrencyConversion()));
             HttpResponse response;
             try {
                 response = HttpManager.execute(httpget);
@@ -206,7 +255,7 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
         // When the user deletes the widget, delete the preference associated with it.
         final int N = appWidgetIds.length;
         for (int i=0; i<N; i++) {
-            MtGoxPreferences.deletePrefs(context, appWidgetIds[i]);
+            MtGoxPreferencesActivity.deletePrefs(context, appWidgetIds[i]);
         }
     }
 

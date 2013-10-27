@@ -44,6 +44,18 @@ import java.util.List;
  */
 public class GraphPopupActivity extends Activity {
 
+    private enum GraphTimeframe {OneDay("day", 1, "HH:mm"), OneWeek("week", 7, "MM-dd");
+        public final String description;
+        public final int days;
+        public String timeFormat;
+
+        GraphTimeframe(String description, int days, String timeFormat) {
+            this.description = description;
+            this.days = days;
+            this.timeFormat = timeFormat;
+        }
+    }
+
     private GraphicalView chartView;
     private XYMultipleSeriesDataset dataset;
     private XYMultipleSeriesRenderer renderer;
@@ -53,6 +65,7 @@ public class GraphPopupActivity extends Activity {
     private static final long ONE_DAY_IN_MS = 24*60*60*1000; // 24 hours
     private boolean emptyChart = false;
     private int appWidgetId;
+    private GraphTimeframe graphTimeframe = GraphTimeframe.OneDay;
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -60,9 +73,14 @@ public class GraphPopupActivity extends Activity {
 
         appWidgetId = getIntent().getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
 
+        showGraphPopup();
+    }
+
+    private void showGraphPopup() {
         MtGoxDataOpenHelper db = new MtGoxDataOpenHelper(this);
-        RateService rateService = MtGoxPreferences.getRateService(this, appWidgetId);
-        List<MtGoxTickerData> tickerData = db.getTickerData(System.currentTimeMillis() - ONE_DAY_IN_MS, rateService);
+        WidgetPreferences preferences = MtGoxPreferencesActivity.getWidgetPreferences(this, appWidgetId);
+        List<MtGoxTickerData> tickerData = db.getTickerData(System.currentTimeMillis() -
+                (ONE_DAY_IN_MS * graphTimeframe.days), preferences);
         if (tickerData.size() > 0) {
             setupChart(tickerData);
             emptyChart = false;
@@ -70,7 +88,8 @@ public class GraphPopupActivity extends Activity {
             emptyChart = true;
         }
 
-        setTitle(rateService.getName() + " - Last 24 hours");
+        setTitle(preferences.getRateService().getName() + " " +
+                 preferences.getCurrencyConversion().description + " - Last " + graphTimeframe.description);
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND,
                 WindowManager.LayoutParams.FLAG_DIM_BEHIND);
@@ -115,9 +134,9 @@ public class GraphPopupActivity extends Activity {
         renderer.setXLabels(8);
         renderer.setYLabels(12);
         renderer.setXTitle("@");
-        renderer.setYTitle("$");
+        renderer.setYTitle("Value"); // TODO: Change to something else
         renderer.setShowGrid(true);
-        renderer.setXAxisMin(System.currentTimeMillis() - ONE_DAY_IN_MS - PADDING_MS);
+        renderer.setXAxisMin(System.currentTimeMillis() - (ONE_DAY_IN_MS * graphTimeframe.days) - PADDING_MS);
         renderer.setXAxisMax(System.currentTimeMillis() + PADDING_MS);
         return renderer;
     }
@@ -148,7 +167,7 @@ public class GraphPopupActivity extends Activity {
                     LayoutParams.FILL_PARENT));
         } else {
 
-            chartView = ChartFactory.getTimeChartView(this, dataset, renderer, "HH:mm");
+            chartView = ChartFactory.getTimeChartView(this, dataset, renderer, graphTimeframe.timeFormat);
             layout.addView(chartView, new LayoutParams(LayoutParams.FILL_PARENT,
                     LayoutParams.FILL_PARENT));
 
@@ -177,6 +196,19 @@ public class GraphPopupActivity extends Activity {
 //    }
 
 
+    @Override
+    public boolean onPrepareOptionsMenu(final Menu menu) {
+        if(graphTimeframe.equals(GraphTimeframe.OneDay)) {
+            menu.findItem(R.id.switchTimeframe).setTitle("Show last " + GraphTimeframe.OneWeek.description);
+            menu.findItem(R.id.switchTimeframe).setIcon(R.drawable.ic_menu_week);
+
+        } else {
+            menu.findItem(R.id.switchTimeframe).setTitle("Show last " + GraphTimeframe.OneDay.description);
+            menu.findItem(R.id.switchTimeframe).setIcon(R.drawable.ic_menu_day);
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
     // http://developer.android.com/guide/topics/ui/menus.html
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -191,10 +223,20 @@ public class GraphPopupActivity extends Activity {
             case R.id.refreshMenu:
                 finish();
                 String toastText = "Refreshing rate from " +
-                        MtGoxPreferences.getRateService(this,appWidgetId).getName()+ "...";
+                        MtGoxPreferencesActivity.getWidgetPreferences(this, appWidgetId).getRateService().getName()+ "...";
                 Toast.makeText(this, toastText, Toast.LENGTH_LONG).show();
                 AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
                 MtGoxWidgetProvider.updateAppWidget(this, appWidgetManager, appWidgetId);
+                return true;
+            case R.id.switchTimeframe:
+                if(graphTimeframe.equals(GraphTimeframe.OneDay)) {
+                    graphTimeframe = GraphTimeframe.OneWeek;
+                } else {
+                    graphTimeframe = GraphTimeframe.OneDay;
+                }
+
+                showGraphPopup();
+                onResume();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

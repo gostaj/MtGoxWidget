@@ -2,6 +2,9 @@
 <!--http://www.kaloer.com/android-preferences-->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <PreferenceCategory
+            android:title="General">
+
     <ListPreference
             android:title="Exchange service"
             android:summary="The exchange service that the Bitcoin rate is taken from"
@@ -10,9 +13,28 @@
             android:entryValues="@array/serviceValues"
             android:defaultValue="MTGOX" />
 
+        <ListPreference
+                android:title="Currency"
+                android:summary="The currency conversion rate to show"
+                android:key="currencyConversionPref"/>
+
+        <ListPreference
+            android:title="Color mode"
+            android:summary="The color mode for the text and numbers in the widget"
+            android:key="colorModePref"
+            android:entries="@array/colorModeList"
+            android:entryValues="@array/colorModeList"
+            android:defaultValue="Default" />
+
+    </PreferenceCategory>
+
+<PreferenceCategory
+            android:title="Add widget">
     <Preference
             android:title="Add widget"
             android:summary="Click here to add widget to home screen"
             android:key="addWidget" />
+
+    </PreferenceCategory>
 
 </PreferenceScreen>

@@ -4,7 +4,7 @@
     android:minWidth="72dp"
     android:minHeight="72dp"
     android:initialLayout="@layout/appwidget_provider"
-    android:configure="st.brothas.mtgoxwidget.MtGoxPreferences"
+    android:configure="st.brothas.mtgoxwidget.MtGoxPreferencesActivity"
     android:updatePeriodMillis="1800000">
 </appwidget-provider>
 
