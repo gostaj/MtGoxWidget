@@ -31,7 +31,8 @@ public enum RateService {
     BITFLOOR(5,"Bitfloor", new TickerUrl(BTC_USD, "https://api.bitfloor.com/ticker/1")),
     BITSTAMP(6,"Bitstamp", new TickerUrl(BTC_USD, "https://www.bitstamp.net/api/ticker/")),
     CRYPTOXCHANGE (7, "Crypto X Change", new TickerUrl(BTC_USD, "http://cryptoxchange.com/api/v0/data/BTCUSD/ticker")),
-    BTCE (8, "BTC-e", new TickerUrl(BTC_USD, "https://btc-e.com/api/2/btc_usd/ticker"));
+    BTCE (8, "BTC-e", new TickerUrl(BTC_USD, "https://btc-e.com/api/2/btc_usd/ticker")),
+    COINBASE (9, "Coinbase", new TickerUrl(BTC_USD, new String[] { "https://coinbase.com/api/v1/prices/buy", "https://coinbase.com/api/v1/prices/sell", "https://coinbase.com/api/v1/prices/spot_rate" }));
 
     private final int id;
     private final String name;
@@ -79,11 +80,16 @@ public enum RateService {
                 break;
             case BTCE:
                 // {"ticker":{"high":143.99001,"low":52.999,"avg":98.494505,"vol":7945244.62099,"vol_cur":99804.06692,"last":65.989,"buy":65.201,"sell":65.11,"server_time":1365771883}}
-                tickerData.setLast(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "last")));
-                tickerData.setLow(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "low")));
-                tickerData.setHigh(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "high")));
-                tickerData.setBuy(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "buy")));
-                tickerData.setSell(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "sell")));
+                tickerData.setLast(tryToParseDouble(getJSONTickerKey(json, "ticker", "last")));
+                tickerData.setLow(tryToParseDouble(getJSONTickerKey(json, "ticker", "low")));
+                tickerData.setHigh(tryToParseDouble(getJSONTickerKey(json, "ticker", "high")));
+                tickerData.setBuy(tryToParseDouble(getJSONTickerKey(json, "ticker", "buy")));
+                tickerData.setSell(tryToParseDouble(getJSONTickerKey(json, "ticker", "sell")));
+                break;
+            case COINBASE:
+                tickerData.setBuy( tryToParseDouble(getJSONTickerKey(json, "url0", "subtotal", "amount")));
+                tickerData.setSell(tryToParseDouble(getJSONTickerKey(json, "url1", "subtotal", "amount")));
+                tickerData.setLast(tryToParseDouble(getJSONTickerKey(json, "url2", "amount")));
                 break;
             default:
                 // Mt Gox:
@@ -100,11 +106,11 @@ public enum RateService {
                 // "sell":{"value":"71.32568","value_int":"7132568","display":"$71.33","display_short":"$71.33","currency":"USD"},
                 // "now":"1363938453428998"}}
 
-                tickerData.setLast(tryToParseDouble(getJSONTickerKeyFromObjects(json, "data", "last", "value")));
-                tickerData.setLow(tryToParseDouble(getJSONTickerKeyFromObjects(json, "data", "low", "value")));
-                tickerData.setHigh(tryToParseDouble(getJSONTickerKeyFromObjects(json, "data", "high", "value")));
-                tickerData.setBuy(tryToParseDouble(getJSONTickerKeyFromObjects(json, "data", "buy", "value")));
-                tickerData.setSell(tryToParseDouble(getJSONTickerKeyFromObjects(json, "data", "sell", "value")));
+                tickerData.setLast(tryToParseDouble(getJSONTickerKey(json, "data", "last", "value")));
+                tickerData.setLow(tryToParseDouble(getJSONTickerKey(json, "data", "low", "value")));
+                tickerData.setHigh(tryToParseDouble(getJSONTickerKey(json, "data", "high", "value")));
+                tickerData.setBuy(tryToParseDouble(getJSONTickerKey(json, "data", "buy", "value")));
+                tickerData.setSell(tryToParseDouble(getJSONTickerKey(json, "data", "sell", "value")));
         }
 
         return tickerData;
@@ -114,10 +120,10 @@ public enum RateService {
         return name;
     }
 
-    public String getTickerUrl(CurrencyConversion currencyConversion) {
+    public String[] getTickerUrls(CurrencyConversion currencyConversion) {
         for (TickerUrl tickerUrl : tickerUrls) {
             if (tickerUrl.currencyConversion.equals(currencyConversion))
-                return tickerUrl.tickerUrl;
+                return tickerUrl.tickerUrls;
         }
         throw new IllegalArgumentException("Currency " + currencyConversion + " is not supported by " + name);
     }
@@ -144,11 +150,16 @@ public enum RateService {
 
     private static class TickerUrl {
         private final CurrencyConversion currencyConversion;
-        private final String tickerUrl;
+        private final String[] tickerUrls;
 
         TickerUrl(CurrencyConversion currencyConversion, String tickerUrl) {
             this.currencyConversion = currencyConversion;
-            this.tickerUrl = tickerUrl;
+            this.tickerUrls = new String[] { tickerUrl };
+        }
+
+        TickerUrl(CurrencyConversion currencyConversion, String[] tickerUrls) {
+            this.currencyConversion = currencyConversion;
+            this.tickerUrls = tickerUrls;
         }
     }
 }

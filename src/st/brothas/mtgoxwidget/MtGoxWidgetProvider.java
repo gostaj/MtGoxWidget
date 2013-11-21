@@ -210,12 +210,16 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 	}
 
     private static JSONObject getLatestQuoteJSON(WidgetPreferences preferences) {
-        HttpGet httpget = new HttpGet(preferences.getRateService().getTickerUrl(preferences.getCurrencyConversion()));
+        JSONObject combined = new JSONObject();
+        int i = 0;
+
+        for (String tickerUrl : preferences.getRateService().getTickerUrls(preferences.getCurrencyConversion())) {
+            HttpGet httpget = new HttpGet(tickerUrl);
             HttpResponse response;
+            JSONObject jObject = null;
             try {
                 response = HttpManager.execute(httpget);
                 HttpEntity entity = response.getEntity();
-                JSONObject jObject = null;
                 if (entity != null) {
                     InputStream instream = entity.getContent();
                     String result = convertStreamToString(instream);
@@ -224,16 +228,34 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
                     jObject = new JSONObject(result);
                     instream.close();
                 }
-                return jObject;
             } catch (ClientProtocolException e) {
-    			Log.e(LOG_TAG, "Error when getting JSON", e);
+                Log.e(LOG_TAG, "Error when getting JSON", e);
             } catch (IOException e) {
-    			Log.e(LOG_TAG, "Error when getting JSON: " + e.getMessage());
+                Log.e(LOG_TAG, "Error when getting JSON: " + e.getMessage());
             } catch (JSONException e) {
-    			Log.e(LOG_TAG, "Error when parsing JSON", e);
+                Log.e(LOG_TAG, "Error when parsing JSON", e);
             }
-            return null;
+            
+            try {
+                combined.put("url" + Integer.toString(i), jObject);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, "Error when combining JSON", e);
+            }
+            i += 1;
         }
+
+        // If there's only one URL, just return the first (for backwards compatability)
+        if (combined.length() == 1) {
+            try {
+                return combined.getJSONObject("url1");
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, "Error when uncombining JSON", e);
+            }
+        } else {
+            return combined;
+        }
+        return null;
+    }
 
 	private static String convertStreamToString(InputStream instream) {
 		BufferedReader rd = new BufferedReader(new InputStreamReader(instream), 4096);

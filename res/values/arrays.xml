@@ -5,6 +5,7 @@
         <item>Bitstamp</item>
         <item>Crypto X Change</item>
         <item>BTC-e</item>
+        <item>Coinbase</item>
     </string-array>
 
     <string-array name="serviceValues">
@@ -13,6 +14,7 @@
         <item>BITSTAMP</item>
         <item>CRYPTOXCHANGE</item>
         <item>BTCE</item>
+        <item>COINBASE</item>
     </string-array>
 
     <string-array name="colorModeList">
