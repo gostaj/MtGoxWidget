@@ -247,7 +247,7 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
         // If there's only one URL, just return the first (for backwards compatability)
         if (combined.length() == 1) {
             try {
-                return combined.getJSONObject("url1");
+                return combined.getJSONObject("url0");
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "Error when uncombining JSON", e);
             }
