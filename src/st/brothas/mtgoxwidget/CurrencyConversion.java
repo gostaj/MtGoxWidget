@@ -22,6 +22,7 @@ public enum CurrencyConversion {
     BTC_JPY(7, "BTC/JPY", "¥"),
     BTC_RUB(8, "BTC/RUB", "р"),
     BTC_SEK(9, "BTC/SEK", "k"),
+    BTC_PLN(10,"BTC/PLN", "zł"),
 
     // Litecoins
     LTC_BTC(106, "LTC/BTC", "฿"),
