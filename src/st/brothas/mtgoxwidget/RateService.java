@@ -17,9 +17,10 @@ public enum RateService {
             new TickerUrl(BTC_CNY, "https://data.mtgox.com/api/2/BTCCNY/money/ticker"),
             new TickerUrl(BTC_JPY, "https://data.mtgox.com/api/2/BTCJPY/money/ticker"),
             new TickerUrl(BTC_RUB, "https://data.mtgox.com/api/2/BTCRUB/money/ticker"),
-            new TickerUrl(BTC_SEK, "https://data.mtgox.com/api/2/BTCSEK/money/ticker")),
+            new TickerUrl(BTC_SEK, "https://data.mtgox.com/api/2/BTCSEK/money/ticker"),
+            new TickerUrl(BTC_PLN, "https://data.mtgox.com/api/2/BTCPLN/money/ticker")),
 
-            // TradeHill shut down trading February 13, 2012.
+    // TradeHill shut down trading February 13, 2012.
     TRADEHILL(2,"TradeHill"),
 
     CAMPBX(3, "Camp BX", new TickerUrl(BTC_USD, "http://campbx.com/api/xticker.php")),
@@ -31,7 +32,11 @@ public enum RateService {
     BITFLOOR(5,"Bitfloor", new TickerUrl(BTC_USD, "https://api.bitfloor.com/ticker/1")),
     BITSTAMP(6,"Bitstamp", new TickerUrl(BTC_USD, "https://www.bitstamp.net/api/ticker/")),
     CRYPTOXCHANGE (7, "Crypto X Change", new TickerUrl(BTC_USD, "http://cryptoxchange.com/api/v0/data/BTCUSD/ticker")),
-    BTCE (8, "BTC-e", new TickerUrl(BTC_USD, "https://btc-e.com/api/2/btc_usd/ticker"));
+    BTCE (8, "BTC-e", new TickerUrl(BTC_USD, "https://btc-e.com/api/2/btc_usd/ticker"),
+
+    BITCUREX(9, "Bitcurex",
+            new TickerUrl(BTC_PLN, "https://pln.bitcurex.com/data/ticker.json"),
+            new TickerUrl(BTC_EUR, "https://eur.bitcurex.com/data/ticker.json"));
 
     private final int id;
     private final String name;
@@ -84,6 +89,14 @@ public enum RateService {
                 tickerData.setHigh(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "high")));
                 tickerData.setBuy(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "buy")));
                 tickerData.setSell(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "sell")));
+                break;
+            case BITCUREX:
+                // {"high":2199.76,"low":1954,"avg":2076.88,"vwap":2082.0488574,"vol":528.33722382,"last":2088,"buy":2088,"sell":2089,"time":1387543316}
+                tickerData.setLast(tryToParseDouble(getJSONTickerKey(json, "last")));
+                tickerData.setLow(tryToParseDouble(getJSONTickerKey(json, "low")));
+                tickerData.setHigh(tryToParseDouble(getJSONTickerKey(json, "high")));
+                tickerData.setBuy(tryToParseDouble(getJSONTickerKey(json, "buy")));
+                tickerData.setSell(tryToParseDouble(getJSONTickerKey(json, "sell")));
                 break;
             default:
                 // Mt Gox:
