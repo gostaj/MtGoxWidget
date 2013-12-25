@@ -27,25 +27,29 @@ public class MtGoxPreferencesActivity extends PreferenceActivity {
         super.onCreate(savedInstanceState);
         setResult(RESULT_CANCELED); // Cancelled until the user decides to add it
         addPreferencesFromResource(R.xml.preferences);
-        PreferenceManager.setDefaultValues(this, R.xml.preferences, false); // To set default values in dropdowns
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, true); // To set default values in dropdowns
         final WidgetPreferences widgetPreferences = new WidgetPreferences();
 
         // Get the service ListPreference from the GUI
         final Preference servicePref = findPreference("servicePref");
+        // Get the currency conversion ListPreference from the GUI
+        final Preference currencyConversionPref = findPreference("currencyConversionPref");
+
         //updatePreferenceSummary(servicePref, selectedRateService.getName());
         updateCurrencyChoices(widgetPreferences.getRateService());
         servicePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                widgetPreferences.setRateService(RateService.valueOf((String) newValue));
+                final RateService newRateService = RateService.valueOf((String) newValue);
+                widgetPreferences.setRateService(newRateService);
+                widgetPreferences.setCurrencyConversion(newRateService.getCurrencyConversions().get(0));
                 updatePreferenceSummary(servicePref, widgetPreferences.getRateService().getName());
+                updatePreferenceSummary(currencyConversionPref, widgetPreferences.getCurrencyConversion().description);
                 updateCurrencyChoices(widgetPreferences.getRateService());
 
                 return true;
             }
         });
 
-        // Get the currency conversion ListPreference from the GUI
-        final Preference currencyConversionPref = findPreference("currencyConversionPref");
         currencyConversionPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 widgetPreferences.setCurrencyConversion(CurrencyConversion.valueOf((String) newValue));
@@ -94,6 +98,7 @@ public class MtGoxPreferencesActivity extends PreferenceActivity {
         }
         lp.setEntries(entries);
         lp.setEntryValues(entryValues);
+        lp.setValueIndex(0);
     }
 
     private void updateWidgetWithWaitMessage(int appWidgetId) {
