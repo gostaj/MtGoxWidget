@@ -53,24 +53,24 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
                         COLUMN_LOW + " REAL, " +
                         COLUMN_LAST + " REAL, " +
                         COLUMN_BUY + " REAL, " +
-                        COLUMN_SELL + " REAL);";
+                        COLUMN_SELL + " REAL)";
 
 	private static final String QUERY_COUNT_LAST_VALUES =
             "SELECT COUNT(*) FROM "
-			+ TICKER_DATA_TABLE_NAME + ";";
+			+ TICKER_DATA_TABLE_NAME;
 
 	private static final String QUERY_LAST_TICKER_DATA =
             "SELECT * FROM " + TICKER_DATA_TABLE_NAME +
             " WHERE " + COLUMN_SOURCE + " = ? " +
             " AND " + COLUMN_CURRENCY + " = ? " +
-            " ORDER BY " + COLUMN_TIMESTAMP + " DESC LIMIT 1;";
+            " ORDER BY " + COLUMN_TIMESTAMP + " DESC LIMIT 1";
 
     private static final String QUERY_NEWEST_TICKER_DATA =
             "SELECT * FROM " + TICKER_DATA_TABLE_NAME +
             " WHERE " + COLUMN_TIMESTAMP + " > ? " +
             " AND " + COLUMN_SOURCE + " = ? " +
             " AND " + COLUMN_CURRENCY + " = ? " +
-            " ORDER BY " + COLUMN_TIMESTAMP + " DESC;";
+            " ORDER BY " + COLUMN_TIMESTAMP + " DESC";
 
 	private static final Long TIME_TO_KEEP_DATA_IN_SECS = 60*60*24*7L; // 7 days
 
