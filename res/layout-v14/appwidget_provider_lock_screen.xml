@@ -6,8 +6,7 @@
               android:gravity="center"
               android:orientation="vertical"
               android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:padding="3dp">
+              android:layout_height="fill_parent">
 
     <!-- Top row -->
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -18,33 +17,37 @@
 
         <TextView
                 android:id="@+id/appwidget_low"
-                android:gravity="left"
-                android:textSize="5pt"
+                android:textSize="20dp"
+                android:textColor="#ffffff"
+                android:gravity="top"
                 android:layout_width="wrap_content"
+                android:layout_height="fill_parent"/>
+
+        <!-- Last value -->
+        <TextView
+                android:id="@+id/appwidget_last"
+                android:gravity="center"
+                android:textSize="40dp"
+                android:textColor="#aa5555"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"/>
+                android:layout_marginTop="15dp"
+                android:layout_weight="50"/>
 
         <TextView
                 android:id="@+id/appwidget_high"
-                android:gravity="right"
-                android:textSize="5pt"
+                android:textSize="20dp"
+                android:textColor="#ffffff"
+                android:gravity="top"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"/>
+                android:layout_height="fill_parent"/>
+
     </LinearLayout>
 
-    <!-- Last value -->
-    <TextView
-            android:id="@+id/appwidget_last"
-            android:gravity="center"
-            android:textSize="9pt"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#aa5555"/>
 
     <!-- Layout for logo and service name -->
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                  android:gravity="center_horizontal"
+                  android:gravity="center"
                   android:orientation="horizontal"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content">
@@ -55,6 +58,7 @@
                 android:gravity="left"
                 android:layout_width="wrap_content"
                 android:layout_height="30dp"
+                android:layout_marginRight="3dp"
                 android:adjustViewBounds="true"
                 android:src="@drawable/bc_logo_30"/>
 
@@ -62,10 +66,11 @@
         <TextView
                 android:id="@+id/appwidget_service_name"
                 android:gravity="center_vertical"
-                android:textSize="5pt"
+                android:textSize="20dp"
+                android:textColor="#ffffff"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
-                android:textColor="#ffffff"/>
+                android:layout_marginLeft="3dp"/>
 
     </LinearLayout>
 
@@ -78,11 +83,13 @@
         <TextView
                 android:id="@+id/appwidget_updated"
                 android:gravity="bottom"
-                android:textSize="5pt"
+                android:textSize="14dp"
+                android:textColor="#cccccc"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
-                android:textColor="#cccccc"/>
+                android:layout_marginBottom="6dp"/>
 
     </LinearLayout>
 
 </LinearLayout>
+

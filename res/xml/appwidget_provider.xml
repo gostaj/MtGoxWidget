@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
+<!-- Increasing the min values does not give a bigger 1x1 widget. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="72dp"
-    android:minHeight="72dp"
+    android:minWidth="40dp"
+    android:minHeight="40dp"
     android:initialLayout="@layout/appwidget_provider"
     android:configure="st.brothas.mtgoxwidget.MtGoxPreferencesActivity"
-    android:updatePeriodMillis="1800000">
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="keyguard|home_screen">
 </appwidget-provider>
 

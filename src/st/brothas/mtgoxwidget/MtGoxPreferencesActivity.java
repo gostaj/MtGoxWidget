@@ -114,7 +114,7 @@ public class MtGoxPreferencesActivity extends PreferenceActivity {
         finish();
 
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-        MtGoxWidgetProvider.updateAppWidget(this, appWidgetManager, appWidgetId);
+        MtGoxWidgetProvider.updateAppWidgetAsync(this, appWidgetManager, appWidgetId);
     }
 
     private void updatePreferenceSummary(Preference preference, String currentPreference) {

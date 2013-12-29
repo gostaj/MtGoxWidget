@@ -7,7 +7,7 @@
               android:orientation="vertical"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
-              android:padding="3dp">
+              > <!-- android:background="@drawable/my_border"  android:padding="3dp" -->
 
     <!-- Top row -->
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -19,7 +19,7 @@
         <TextView
                 android:id="@+id/appwidget_low"
                 android:gravity="left"
-                android:textSize="5pt"
+                android:textSize="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"/>
@@ -27,7 +27,7 @@
         <TextView
                 android:id="@+id/appwidget_high"
                 android:gravity="right"
-                android:textSize="5pt"
+                android:textSize="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"/>
@@ -37,24 +37,26 @@
     <TextView
             android:id="@+id/appwidget_last"
             android:gravity="center"
-            android:textSize="9pt"
+            android:textSize="16dp"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textColor="#aa5555"/>
+            android:textColor="#aa5555"
+            android:layout_marginTop="2dp"/>
 
     <!-- Layout for logo and service name -->
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                  android:gravity="center_horizontal"
+                  android:gravity="center"
                   android:orientation="horizontal"
                   android:layout_width="wrap_content"
-                  android:layout_height="wrap_content">
+                  android:layout_height="wrap_content"
+                  android:layout_marginTop="4dp">
 
         <!-- Bitcoin logo -->
         <ImageView
                 android:id="@+id/appwidget_logo"
                 android:gravity="left"
                 android:layout_width="wrap_content"
-                android:layout_height="30dp"
+                android:layout_height="20dp"
                 android:adjustViewBounds="true"
                 android:src="@drawable/bc_logo_30"/>
 
@@ -62,7 +64,7 @@
         <TextView
                 android:id="@+id/appwidget_service_name"
                 android:gravity="center_vertical"
-                android:textSize="5pt"
+                android:textSize="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:textColor="#ffffff"/>
@@ -78,7 +80,7 @@
         <TextView
                 android:id="@+id/appwidget_updated"
                 android:gravity="bottom"
-                android:textSize="5pt"
+                android:textSize="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:textColor="#cccccc"/>
@@ -86,3 +88,4 @@
     </LinearLayout>
 
 </LinearLayout>
+

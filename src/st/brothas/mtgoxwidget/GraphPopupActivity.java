@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -42,7 +43,7 @@ import java.util.List;
 /**
  * Represents the graph that shows the ticker data change in time.
  */
-public class GraphPopupActivity extends Activity {
+public class GraphPopupActivity extends ActionBarActivity {
 
     private enum GraphTimeframe {OneDay("day", 1, "HH:mm"), OneWeek("week", 7, "MM-dd");
         public final String description;
@@ -133,11 +134,16 @@ public class GraphPopupActivity extends Activity {
         XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer();
         renderer.setXLabels(8);
         renderer.setYLabels(12);
-        renderer.setXTitle("@");
+        renderer.setXTitle("");
         renderer.setYTitle("Value"); // TODO: Change to something else
         renderer.setShowGrid(true);
         renderer.setXAxisMin(System.currentTimeMillis() - (ONE_DAY_IN_MS * graphTimeframe.days) - PADDING_MS);
         renderer.setXAxisMax(System.currentTimeMillis() + PADDING_MS);
+        renderer.setAxisTitleTextSize(20);
+        renderer.setChartTitleTextSize(20);
+        renderer.setLegendTextSize(20);
+        renderer.setLabelsTextSize(22);
+        renderer.setFitLegend(true);
         return renderer;
     }
 
@@ -163,13 +169,13 @@ public class GraphPopupActivity extends Activity {
         if (emptyChart) {
             TextView tview = new TextView(this);
             tview.setText(R.string.empty_graph);
-            layout.addView(tview, new LayoutParams(LayoutParams.FILL_PARENT,
-                    LayoutParams.FILL_PARENT));
+            layout.addView(tview, new LayoutParams(LayoutParams.MATCH_PARENT,
+                    LayoutParams.MATCH_PARENT));
         } else {
 
             chartView = ChartFactory.getTimeChartView(this, dataset, renderer, graphTimeframe.timeFormat);
-            layout.addView(chartView, new LayoutParams(LayoutParams.FILL_PARENT,
-                    LayoutParams.FILL_PARENT));
+            layout.addView(chartView, new LayoutParams(LayoutParams.MATCH_PARENT,
+                    LayoutParams.MATCH_PARENT));
 
         }
 //      } else if (chartView != null) {
@@ -226,7 +232,7 @@ public class GraphPopupActivity extends Activity {
                         MtGoxPreferencesActivity.getWidgetPreferences(this, appWidgetId).getRateService().getName()+ "...";
                 Toast.makeText(this, toastText, Toast.LENGTH_LONG).show();
                 AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-                MtGoxWidgetProvider.updateAppWidget(this, appWidgetManager, appWidgetId);
+                MtGoxWidgetProvider.updateAppWidgetAsync(this, appWidgetManager, appWidgetId);
                 return true;
             case R.id.switchTimeframe:
                 if(graphTimeframe.equals(GraphTimeframe.OneDay)) {

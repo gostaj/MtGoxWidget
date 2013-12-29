@@ -20,17 +20,19 @@ package st.brothas.mtgoxwidget;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
-import org.json.JSONException;
-import org.json.JSONObject;
 import st.brothas.mtgoxwidget.net.HttpManager;
 
 import java.io.BufferedReader;
@@ -41,6 +43,7 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static st.brothas.mtgoxwidget.CurrencyConversion.VirtualCurrency.LITECOIN;
 
 /**
  *
@@ -54,15 +57,18 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        final int N = appWidgetIds.length;
-        for (int i=0; i<N; i++) {
-            int appWidgetId = appWidgetIds[i];
-            updateAppWidget(context, appWidgetManager, appWidgetId);
-        }
+        updateAppWidgetAsync(context, appWidgetManager, appWidgetIds);
     }
 
-    static void updateAppWidget(final Context context, AppWidgetManager appWidgetManager,
-            int appWidgetId) {
+    public static void updateAppWidgetAsync(final Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+        updateAppWidgetAsync(context, appWidgetManager, new int[] { appWidgetId });
+    }
+
+    public static void updateAppWidgetAsync(final Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        new UpdateAsyncTask(context, appWidgetManager, appWidgetIds).execute();
+    }
+
+    private static void updateAppWidget(final Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
 
         WidgetPreferences preferences = MtGoxPreferencesActivity.getWidgetPreferences(context, appWidgetId);
 
@@ -74,7 +80,15 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
             return;
         }
 
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.appwidget_provider);
+        boolean isOnLockScreen = isWidgetShownOnLockScreen(appWidgetManager, appWidgetId);
+
+        RemoteViews views;
+        if (isOnLockScreen) {
+            views = new RemoteViews(context.getPackageName(), R.layout.appwidget_provider_lock_screen);
+        } else {
+            views = new RemoteViews(context.getPackageName(), R.layout.appwidget_provider);
+        }
+
         Intent clickIntent = new Intent(context, GraphPopupActivity.class);
         clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         clickIntent.setAction("dummyAction"); // Needed to get the extra variables included in the call
@@ -88,9 +102,9 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
         MtGoxTickerData prevData = dbHelper.getLastTickerData(preferences);
 
         MtGoxTickerData newData;
-        JSONObject latestQuoteJSON = getLatestQuoteJSON(preferences);
-        if (latestQuoteJSON != null) {
-            newData = preferences.getRateService().parseJSON(latestQuoteJSON);
+        String latestQuote = getLatestQuote(preferences);
+        if (latestQuote != null && !latestQuote.equals("")) {
+            newData = preferences.getRateService().parseJSON(latestQuote);
             newData.setCurrencyConversion(preferences.getCurrencyConversion());
             storeLastValueIfNotNull(dbHelper, newData);
             updateViews(views, prevData, newData, preferences);
@@ -102,6 +116,20 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
         }
         appWidgetManager.updateAppWidget(appWidgetId, views);
    }
+
+    private static boolean isWidgetShownOnLockScreen(AppWidgetManager appWidgetManager, int appWidgetId) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            // The below functionality was introduced in API version 16 (Jelly Bean)
+            Bundle myOptions = appWidgetManager.getAppWidgetOptions(appWidgetId);
+
+            // Get the value of OPTION_APPWIDGET_HOST_CATEGORY
+            int category = myOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_HOST_CATEGORY, -1);
+
+            // If the value is WIDGET_CATEGORY_KEYGUARD, it's a lockscreen widget
+            return category == AppWidgetProviderInfo.WIDGET_CATEGORY_KEYGUARD;
+        }
+        return false;
+    }
 
     private static void updateViews(RemoteViews views, MtGoxTickerData prevData, MtGoxTickerData newData,
                                     WidgetPreferences preferences) {
@@ -127,6 +155,17 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
         views.setTextViewText(R.id.appwidget_high, highRounded);
         views.setTextViewText(R.id.appwidget_low, lowRounded);
         views.setTextViewText(R.id.appwidget_updated, updated);
+
+        // Set Litecoin logo if that is the chosen currency.
+        switch (preferences.getCurrencyConversion().virtualCurrency) {
+            case LITECOIN:
+                views.setImageViewResource(R.id.appwidget_logo, R.drawable.lc_logo_30);
+                break;
+            case QUARK:
+                views.setImageViewResource(R.id.appwidget_logo, R.drawable.qrk_logo_30);
+                break;
+            // The Bitcoin logo is default in the layout.
+        }
     }
 
     private static void updateViewsWithError(RemoteViews views, WidgetPreferences preferences) {
@@ -186,6 +225,8 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
             decimals = 0;
         } else if (value >= 100) {
             decimals = 1;
+        } else if (value < 10) {
+            decimals = 3;
         }
 
         return BigDecimal.valueOf(value).setScale(decimals, BigDecimal.ROUND_HALF_UP).toString();
@@ -209,53 +250,46 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
        }
 	}
 
-    private static JSONObject getLatestQuoteJSON(WidgetPreferences preferences) {
+    private static String getLatestQuote(WidgetPreferences preferences) {
         HttpGet httpget = new HttpGet(preferences.getRateService().getTickerUrl(preferences.getCurrencyConversion()));
-            HttpResponse response;
-            try {
-                response = HttpManager.execute(httpget);
-                HttpEntity entity = response.getEntity();
-                JSONObject jObject = null;
-                if (entity != null) {
-                    InputStream instream = entity.getContent();
-                    String result = convertStreamToString(instream);
-//                    Log.d(LOG_TAG, "Getting URI: " + httpget.getURI());
-//                    Log.d(LOG_TAG, "Response: " + result);
-                    jObject = new JSONObject(result);
-                    instream.close();
-                }
-                return jObject;
-            } catch (ClientProtocolException e) {
-    			Log.e(LOG_TAG, "Error when getting JSON", e);
-            } catch (IOException e) {
-    			Log.e(LOG_TAG, "Error when getting JSON: " + e.getMessage());
-            } catch (JSONException e) {
-    			Log.e(LOG_TAG, "Error when parsing JSON", e);
+        HttpResponse response;
+        try {
+            response = HttpManager.execute(httpget);
+            HttpEntity entity = response.getEntity();
+            String responseString = "";
+            if (entity != null) {
+                InputStream inStream = entity.getContent();
+                responseString = convertStreamToString(inStream);
+                inStream.close();
             }
-            return null;
+            return responseString;
+        } catch (ClientProtocolException e) {
+            Log.e(LOG_TAG, "Error when getting JSON", e);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error when getting JSON: " + e.getMessage());
         }
+        return null;
+    }
 
-	private static String convertStreamToString(InputStream instream) {
-		BufferedReader rd = new BufferedReader(new InputStreamReader(instream), 4096);
-		String line;
-		StringBuilder sb =  new StringBuilder();
-		try {
-			while ((line = rd.readLine()) != null) {
-					sb.append(line);
-			}
-			rd.close();
-		} catch (IOException e) {
-			Log.e(LOG_TAG, "Error when converting inputstream to string", e);
-		}
-		return sb.toString();
-	}
-
-@Override
+    private static String convertStreamToString(InputStream inStream) {
+        BufferedReader rd = new BufferedReader(new InputStreamReader(inStream), 4096);
+        String line;
+        StringBuilder sb =  new StringBuilder();
+        try {
+            while ((line = rd.readLine()) != null) {
+                sb.append(line);
+            }
+            rd.close();
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error when converting inputstream to string", e);
+        }
+        return sb.toString();
+    }
+    @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
         // When the user deletes the widget, delete the preference associated with it.
-        final int N = appWidgetIds.length;
-        for (int i=0; i<N; i++) {
-            MtGoxPreferencesActivity.deletePrefs(context, appWidgetIds[i]);
+        for (int appWidgetId : appWidgetIds) {
+            MtGoxPreferencesActivity.deletePrefs(context, appWidgetId);
         }
     }
 
@@ -264,6 +298,29 @@ public class MtGoxWidgetProvider extends AppWidgetProvider {
                                                       int appWidgetId) {
         appWidgetManager.updateAppWidget(appWidgetId,
                 new RemoteViews(context.getPackageName(), R.layout.appwidget_loading));
+    }
+
+    /**
+     * Class for updating the widget(s) asynchronously (not on main thread).
+     */
+    private static class UpdateAsyncTask extends AsyncTask<Void, Void, Void> {
+        private Context context;
+        private AppWidgetManager appWidgetManager;
+        private int[] appWidgetIds;
+
+        public UpdateAsyncTask(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+            this.context = context;
+            this.appWidgetManager = appWidgetManager;
+            this.appWidgetIds = appWidgetIds;
+        }
+
+        @Override
+        protected Void doInBackground(Void... bla) {
+            for (int appWidgetId : appWidgetIds) {
+                updateAppWidget(context, appWidgetManager, appWidgetId);
+            }
+            return null;
+        }
     }
 }
 

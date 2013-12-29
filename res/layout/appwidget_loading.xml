@@ -14,19 +14,9 @@
             android:id="@+id/appwidget_info"
             android:gravity="center"
             android:text="@string/appwidget_loading_text"
-            android:textSize="5pt"
+            android:textSize="10dp"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textColor="#ffffff"/>
-
-
-    <!-- Bitcoin logo -->
-    <ImageView
-            android:gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:adjustViewBounds="true"
-            android:src="@drawable/bc_logo_60"/>
-
 </LinearLayout>
 
