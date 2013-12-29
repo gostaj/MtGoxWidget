@@ -4,15 +4,12 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created with IntelliJ IDEA.
- * User: admin
- * Date: 4/13/13
- * Time: 4:01 PM
- * To change this template use File | Settings | File Templates.
- */
+import static st.brothas.mtgoxwidget.CurrencyConversion.VirtualCurrency.LITECOIN;
+import static st.brothas.mtgoxwidget.CurrencyConversion.VirtualCurrency.QUARK;
+
 public enum CurrencyConversion {
 
+    // Bitcoin
     BTC_USD(1, "BTC/USD", "$"),
     BTC_EUR(2, "BTC/EUR", "€"),
     BTC_GBP(3, "BTC/GBP", "£"),
@@ -22,20 +19,36 @@ public enum CurrencyConversion {
     BTC_JPY(7, "BTC/JPY", "¥"),
     BTC_RUB(8, "BTC/RUB", "р"),
     BTC_SEK(9, "BTC/SEK", "k"),
+    BTC_PLN(10,"BTC/PLN", "z"),
+    BTC_ILS(11,"BTC/ILS", "₪"),
 
-    // Litecoins
-    LTC_BTC(106, "LTC/BTC", "฿"),
-    LTC_USD(107, "LTC/USD", "$");
+    // Litecoin
+    LTC_BTC(106, "LTC/BTC", "฿", LITECOIN),
+    LTC_USD(107, "LTC/USD", "$", LITECOIN),
+    LTC_EUR(108, "LTC/EUR", "€", LITECOIN),
+    LTC_CNY(109, "LTC/CNY", "¥", LITECOIN),
+
+    // Quark
+    QRK_BTC(206, "QRK/BTC", "฿", QUARK),
+    QRK_CNY(207, "QRK/CNY", "¥", QUARK);
+
+    public enum VirtualCurrency {BITCOIN, LITECOIN, QUARK}
 
     public final Integer id;
     public final String description;
     public final String symbol;
+    public final VirtualCurrency virtualCurrency;
     private static final Map<Integer,CurrencyConversion> lookup = new HashMap<Integer,CurrencyConversion>();
 
     CurrencyConversion(int id, String description, String symbol) {
+        this(id, description, symbol, VirtualCurrency.BITCOIN); // Default Bitcoin
+    }
+
+    CurrencyConversion(int id, String description, String symbol, VirtualCurrency virtualCurrency) {
         this.id = id;
         this.description = description;
         this.symbol = symbol;
+        this.virtualCurrency = virtualCurrency;
     }
 
     static {
