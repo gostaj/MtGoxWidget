@@ -1,5 +1,7 @@
 package st.brothas.mtgoxwidget;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -17,7 +19,8 @@ public enum RateService {
             new TickerUrl(BTC_CNY, "https://data.mtgox.com/api/2/BTCCNY/money/ticker"),
             new TickerUrl(BTC_JPY, "https://data.mtgox.com/api/2/BTCJPY/money/ticker"),
             new TickerUrl(BTC_RUB, "https://data.mtgox.com/api/2/BTCRUB/money/ticker"),
-            new TickerUrl(BTC_SEK, "https://data.mtgox.com/api/2/BTCSEK/money/ticker")),
+            new TickerUrl(BTC_SEK, "https://data.mtgox.com/api/2/BTCSEK/money/ticker"),
+            new TickerUrl(BTC_PLN, "https://data.mtgox.com/api/2/BTCPLN/money/ticker")),
 
             // TradeHill shut down trading February 13, 2012.
     TRADEHILL(2,"TradeHill"),
@@ -29,9 +32,45 @@ public enum RateService {
 
     // Bitfloor is closed since April 17, 2013.
     BITFLOOR(5,"Bitfloor", new TickerUrl(BTC_USD, "https://api.bitfloor.com/ticker/1")),
+
     BITSTAMP(6,"Bitstamp", new TickerUrl(BTC_USD, "https://www.bitstamp.net/api/ticker/")),
+
+    // CryptoXChange is closed since November 19, 2012.
     CRYPTOXCHANGE (7, "Crypto X Change", new TickerUrl(BTC_USD, "http://cryptoxchange.com/api/v0/data/BTCUSD/ticker")),
-    BTCE (8, "BTC-e", new TickerUrl(BTC_USD, "https://btc-e.com/api/2/btc_usd/ticker"));
+
+    BTCE (8, "BTC-e",
+            new TickerUrl(BTC_USD, "https://btc-e.com/api/2/btc_usd/ticker"),
+            new TickerUrl(BTC_EUR, "https://btc-e.com/api/2/btc_eur/ticker"),
+            new TickerUrl(LTC_USD, "https://btc-e.com/api/2/ltc_usd/ticker"),
+            new TickerUrl(LTC_EUR, "https://btc-e.com/api/2/ltc_eur/ticker"),
+            new TickerUrl(LTC_BTC, "https://btc-e.com/api/2/ltc_btc/ticker")),
+
+    COINBASE (9, "Coinbase", new TickerUrl(BTC_USD, "https://coinbase.com/api/v1/currencies/exchange_rates")),
+
+    BITCUREX(10, "Bitcurex",
+            new TickerUrl(BTC_PLN, "https://pln.bitcurex.com/data/ticker.json"),
+            new TickerUrl(BTC_EUR, "https://eur.bitcurex.com/data/ticker.json")),
+
+    BITPAY(11, "Bitpay", new TickerUrl(BTC_USD, "https://bitpay.com/api/rates")),
+
+    BTER(12, "BTER",
+            new TickerUrl(BTC_CNY, "https://bter.com/api/1/ticker/btc_cny"),
+            new TickerUrl(LTC_CNY, "https://bter.com/api/1/ticker/ltc_cny"),
+            new TickerUrl(LTC_BTC, "https://bter.com/api/1/ticker/ltc_btc"),
+            new TickerUrl(QRK_BTC, "https://bter.com/api/1/ticker/qrk_btc"),
+            new TickerUrl(QRK_CNY, "https://bter.com/api/1/ticker/qrk_cny")),
+
+    BITKONAN(13, "BKonan", new TickerUrl(BTC_USD, "https://bitkonan.com/api/ticker/")),
+
+    THEROCK(14, "TheRock",
+            new TickerUrl(BTC_USD, "https://www.therocktrading.com/api/ticker/BTCUSD"),
+            new TickerUrl(BTC_EUR, "https://www.therocktrading.com/api/ticker/BTCEUR"),
+            new TickerUrl(LTC_BTC, "https://www.therocktrading.com/api/ticker/LTCBTC"),
+            new TickerUrl(LTC_USD, "https://www.therocktrading.com/api/ticker/LTCUSD"),
+            new TickerUrl(LTC_EUR, "https://www.therocktrading.com/api/ticker/LTCEUR")),
+
+    BIT2C(15, "Bit2C", new TickerUrl(BTC_ILS, "https://www.bit2c.co.il/Exchanges/NIS/Ticker.json"));
+
 
     private final int id;
     private final String name;
@@ -49,41 +88,75 @@ public enum RateService {
             lookup.put(s.getId(), s);
     }
 
-    public MtGoxTickerData parseJSON(JSONObject json) {
+    public MtGoxTickerData parseJSON(String json) {
         MtGoxTickerData tickerData = new MtGoxTickerData();
 
         tickerData.setRateService(this);
         switch (this) {
             case CAMPBX:
                 // {"Last Trade":"11.75","Best Bid":"11.40","Best Ask":"11.67"}
-                tickerData.setLast(tryToParseDouble(getJSONTickerKey(json, "Last Trade")));
-                tickerData.setBuy(tryToParseDouble(getJSONTickerKey(json, "Best Bid")));
-                tickerData.setSell(tryToParseDouble(getJSONTickerKey(json, "Best Ask")));
+                tickerData.setLast(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "Last Trade")));
+                tickerData.setBuy(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "Best Bid")));
+                tickerData.setSell(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "Best Ask")));
                 break;
-            case CRYPTOXCHANGE:
-                // {"high": "5.5000","low": "5.1700","vol": "413.1294","last": "5.1700","buy": "5.1800",
-                //  "sell": "5.3680","market": "BTCUSD","ReturnCodes": 1,"err": "","stamp": ""
-                tickerData.setLast(tryToParseDouble(getJSONTickerKey(json, "last")));
-                tickerData.setLow(tryToParseDouble(getJSONTickerKey(json, "low")));
-                tickerData.setHigh(tryToParseDouble(getJSONTickerKey(json, "high")));
-                tickerData.setBuy(tryToParseDouble(getJSONTickerKey(json, "buy")));
-                tickerData.setSell(tryToParseDouble(getJSONTickerKey(json, "sell")));
+            case COINBASE:
+                // {..."btc_to_usd":"598.56472"...
+                tickerData.setLast(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "btc_to_usd")));
                 break;
+            case THEROCK:
+                // {"result":[{"symbol":"BTCUSD","bid":"610.0200","ask":"660.0000","last":"658.0000","volume":"228.9800","open":"658.0000","high":"660.0000","low":"658.0000","close":"660.0000"}]}
+                try {
+                    json = parseJSONObject(json).getJSONArray("result").getString(0);
+                } catch (JSONException e) {
+                  break;
+                }
             case BITSTAMP:
                 // {"high": "5.19", "last": "5.17", "bid": "5.17", "volume": "479.80406816", "low": "5.10", "ask": "5.20"}
-                tickerData.setLast(tryToParseDouble(getJSONTickerKey(json, "last")));
-                tickerData.setLow(tryToParseDouble(getJSONTickerKey(json, "low")));
-                tickerData.setHigh(tryToParseDouble(getJSONTickerKey(json, "high")));
-                tickerData.setBuy(tryToParseDouble(getJSONTickerKey(json, "bid")));
-                tickerData.setSell(tryToParseDouble(getJSONTickerKey(json, "ask")));
+            case BITKONAN:
+                // {"last":"660.00","high":"660.00","low":"650.00","bid":"555.00","ask":"700.00","open":"553.00","volume":"1.36182191"}
+                tickerData.setLast(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "last")));
+                tickerData.setLow(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "low")));
+                tickerData.setHigh(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "high")));
+                tickerData.setBuy(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "bid")));
+                tickerData.setSell(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "ask")));
                 break;
             case BTCE:
                 // {"ticker":{"high":143.99001,"low":52.999,"avg":98.494505,"vol":7945244.62099,"vol_cur":99804.06692,"last":65.989,"buy":65.201,"sell":65.11,"server_time":1365771883}}
-                tickerData.setLast(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "last")));
-                tickerData.setLow(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "low")));
-                tickerData.setHigh(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "high")));
-                tickerData.setBuy(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "buy")));
-                tickerData.setSell(tryToParseDouble(getJSONTickerKeyFromObject(json, "ticker", "sell")));
+                tickerData.setLast(tryToParseDouble(getJSONTickerKeyFromObject(parseJSONObject(json), "ticker", "last")));
+                tickerData.setLow(tryToParseDouble(getJSONTickerKeyFromObject(parseJSONObject(json), "ticker", "low")));
+                tickerData.setHigh(tryToParseDouble(getJSONTickerKeyFromObject(parseJSONObject(json), "ticker", "high")));
+                tickerData.setBuy(tryToParseDouble(getJSONTickerKeyFromObject(parseJSONObject(json), "ticker", "buy")));
+                tickerData.setSell(tryToParseDouble(getJSONTickerKeyFromObject(parseJSONObject(json), "ticker", "sell")));
+                break;
+            case BITCUREX:
+                // {"high":2199.76,"low":1954,"avg":2076.88,"vwap":2082.0488574,"vol":528.33722382,"last":2088,"buy":2088,"sell":2089,"time":1387543316}
+            case BTER:
+                // {"result":"true","last":0.03099,"high":0.0319,"low":0.02589,"avg":0.02842,"sell":0.03099,"buy":0.03,"vol_ltc":6513.7652,"vol_btc":185.14607}
+                tickerData.setLast(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "last")));
+                tickerData.setLow(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "low")));
+                tickerData.setHigh(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "high")));
+                tickerData.setBuy(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "buy")));
+                tickerData.setSell(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "sell")));
+                break;
+            case BIT2C:
+                tickerData.setLast(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "ll")));
+                tickerData.setBuy(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "h")));
+                tickerData.setSell(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "l")));
+                break;
+            case BITPAY:
+                // [{"code":"USD","name":"US Dollar","rate":597.4889},{"code":"EUR","name":"Eurozone Euro","rate":442.3828},...
+                try {
+                    final JSONArray currencyRates = new JSONArray(json);
+                    for (int i=0; i<currencyRates.length(); i++) {
+                        final JSONObject currencyRate = currencyRates.getJSONObject(i);
+                        if (currencyRate.getString("code").equalsIgnoreCase("USD")) {
+                            tickerData.setLast(tryToParseDouble(getJSONTickerKey(currencyRate, "rate")));
+                            break;
+                        }
+                    }
+                } catch (JSONException e) {
+                    // Do nothing
+                }
                 break;
             default:
                 // Mt Gox:
@@ -100,14 +173,22 @@ public enum RateService {
                 // "sell":{"value":"71.32568","value_int":"7132568","display":"$71.33","display_short":"$71.33","currency":"USD"},
                 // "now":"1363938453428998"}}
 
-                tickerData.setLast(tryToParseDouble(getJSONTickerKeyFromObjects(json, "data", "last", "value")));
-                tickerData.setLow(tryToParseDouble(getJSONTickerKeyFromObjects(json, "data", "low", "value")));
-                tickerData.setHigh(tryToParseDouble(getJSONTickerKeyFromObjects(json, "data", "high", "value")));
-                tickerData.setBuy(tryToParseDouble(getJSONTickerKeyFromObjects(json, "data", "buy", "value")));
-                tickerData.setSell(tryToParseDouble(getJSONTickerKeyFromObjects(json, "data", "sell", "value")));
+                tickerData.setLast(tryToParseDouble(getJSONTickerKeyFromObjects(parseJSONObject(json), "data", "last", "value")));
+                tickerData.setLow(tryToParseDouble(getJSONTickerKeyFromObjects(parseJSONObject(json), "data", "low", "value")));
+                tickerData.setHigh(tryToParseDouble(getJSONTickerKeyFromObjects(parseJSONObject(json), "data", "high", "value")));
+                tickerData.setBuy(tryToParseDouble(getJSONTickerKeyFromObjects(parseJSONObject(json), "data", "buy", "value")));
+                tickerData.setSell(tryToParseDouble(getJSONTickerKeyFromObjects(parseJSONObject(json), "data", "sell", "value")));
         }
 
         return tickerData;
+    }
+
+    private JSONObject parseJSONObject(String json) {
+        try {
+            return new JSONObject(json);
+        } catch (JSONException e) {
+            return new JSONObject();
+        }
     }
 
     public String getName() {

@@ -1,18 +1,30 @@
 <resources>
     <string-array name="serviceList">
-        <item>Mt Gox</item>
-        <item>Camp BX</item>
-        <item>Bitstamp</item>
-        <item>Crypto X Change</item>
-        <item>BTC-e</item>
+        <item>Mt Gox (BTC)</item>
+        <item>Camp BX (BTC)</item>
+        <item>Bitstamp (BTC)</item>
+        <item>BTC-e (BTC, LTC)</item>
+        <item>Coinbase (BTC)</item>
+        <item>Bitcurex (BTC)</item>
+        <item>Bitpay (BTC)</item>
+        <item>Bter (BTC, LTC, QRK)</item>
+        <item>BitKonan (BTC)</item>
+        <item>The Rock (BTC, LTC)</item>
+        <item>Bit2C (BTC)</item>
     </string-array>
 
     <string-array name="serviceValues">
         <item>MTGOX</item>
         <item>CAMPBX</item>
         <item>BITSTAMP</item>
-        <item>CRYPTOXCHANGE</item>
         <item>BTCE</item>
+        <item>COINBASE</item>
+        <item>BITCUREX</item>
+        <item>BITPAY</item>
+        <item>BTER</item>
+        <item>BITKONAN</item>
+        <item>THEROCK</item>
+        <item>BIT2C</item>
     </string-array>
 
     <string-array name="colorModeList">
