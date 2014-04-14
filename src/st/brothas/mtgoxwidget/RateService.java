@@ -69,7 +69,11 @@ public enum RateService {
             new TickerUrl(LTC_USD, "https://www.therocktrading.com/api/ticker/LTCUSD"),
             new TickerUrl(LTC_EUR, "https://www.therocktrading.com/api/ticker/LTCEUR")),
 
-    BIT2C(15, "Bit2C", new TickerUrl(BTC_ILS, "https://www.bit2c.co.il/Exchanges/NIS/Ticker.json"));
+    BIT2C(15, "Bit2C", new TickerUrl(BTC_ILS, "https://www.bit2c.co.il/Exchanges/NIS/Ticker.json")),
+    
+    BITMARKETPL(16, "Bitmarket.pl",
+            new TickerUrl(BTC_PLN, "https://www.bitmarket.pl/json/BTCPLN/ticker.json"),
+            new TickerUrl(LTC_PLN, "https://www.bitmarket.pl/json/LTCPLN/ticker.json"));
 
 
     private final int id;
@@ -112,6 +116,8 @@ public enum RateService {
                 }
             case BITSTAMP:
                 // {"high": "5.19", "last": "5.17", "bid": "5.17", "volume": "479.80406816", "low": "5.10", "ask": "5.20"}
+            case BITMARKETPL:
+                // {"ask":1340,"bid":1336.99,"last":1336,"low":1205.5,"high":1351,"vwap":1265.1313808198,"volume":74.81569614}
             case BITKONAN:
                 // {"last":"660.00","high":"660.00","low":"650.00","bid":"555.00","ask":"700.00","open":"553.00","volume":"1.36182191"}
                 tickerData.setLast(tryToParseDouble(getJSONTickerKey(parseJSONObject(json), "last")));
