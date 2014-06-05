@@ -89,7 +89,7 @@ public class MtGoxDataOpenHelper extends SQLiteOpenHelper {
         if (oldVersion == 3) {
             // Upgrade from DB version 3
             db.execSQL("ALTER TABLE " + TICKER_DATA_TABLE_NAME +
-                    " ADD COLUMN " + COLUMN_SOURCE + " INTEGER NOT NULL DEFAULT " + RateService.MTGOX.getId());
+                    " ADD COLUMN " + COLUMN_SOURCE + " INTEGER NOT NULL DEFAULT " + RateService.getDefaultService());
         }
         if (oldVersion >= 3 && oldVersion <=4 ) {
             // Upgrade from DB version 3 and 4
