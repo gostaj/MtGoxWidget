@@ -21,7 +21,6 @@ import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -43,7 +42,7 @@ import java.util.List;
 /**
  * Represents the graph that shows the ticker data change in time.
  */
-public class GraphPopupActivity extends ActionBarActivity {
+public class GraphPopupActivity extends Activity {
 
     private enum GraphTimeframe {OneDay("day", 1, "HH:mm"), OneWeek("week", 7, "MM-dd");
         public final String description;
