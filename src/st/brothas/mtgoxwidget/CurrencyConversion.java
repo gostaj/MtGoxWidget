@@ -27,6 +27,7 @@ public enum CurrencyConversion {
     LTC_USD(107, "LTC/USD", "$", LITECOIN),
     LTC_EUR(108, "LTC/EUR", "€", LITECOIN),
     LTC_CNY(109, "LTC/CNY", "¥", LITECOIN),
+    LTC_PLN(110, "LTC/PLN", "z", LITECOIN),
 
     // Quark
     QRK_BTC(206, "QRK/BTC", "฿", QUARK),

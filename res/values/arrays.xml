@@ -6,6 +6,7 @@
         <item>BTC-e (BTC, LTC)</item>
         <item>Coinbase (BTC)</item>
         <item>Bitcurex (BTC)</item>
+        <item>Bitmarket.pl (BTC, LTC)</item>
         <item>Bitpay (BTC)</item>
         <item>Bter (BTC, LTC, QRK)</item>
         <item>BitKonan (BTC)</item>
@@ -20,6 +21,7 @@
         <item>BTCE</item>
         <item>COINBASE</item>
         <item>BITCUREX</item>
+        <item>BITMARKETPL</item>
         <item>BITPAY</item>
         <item>BTER</item>
         <item>BITKONAN</item>
