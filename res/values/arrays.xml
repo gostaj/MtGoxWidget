@@ -1,6 +1,5 @@
 <resources>
     <string-array name="serviceList">
-        <item>Mt Gox (BTC)</item>
         <item>Camp BX (BTC)</item>
         <item>Bitstamp (BTC)</item>
         <item>BTC-e (BTC, LTC)</item>
@@ -14,7 +13,6 @@
     </string-array>
 
     <string-array name="serviceValues">
-        <item>MTGOX</item>
         <item>CAMPBX</item>
         <item>BITSTAMP</item>
         <item>BTCE</item>

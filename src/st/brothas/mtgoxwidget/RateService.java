@@ -10,6 +10,7 @@ import static st.brothas.mtgoxwidget.CurrencyConversion.*;
 import static st.brothas.mtgoxwidget.MtGoxTickerUtil.*;
 
 public enum RateService {
+            // Mtgox shut down trading February 2014.
     MTGOX(1, "Mt Gox",
             new TickerUrl(BTC_USD, "https://data.mtgox.com/api/2/BTCUSD/money/ticker"),
             new TickerUrl(BTC_EUR, "https://data.mtgox.com/api/2/BTCEUR/money/ticker"),
@@ -208,7 +209,7 @@ public enum RateService {
     }
 
     public static RateService getDefaultService() {
-        return MTGOX;
+        return BITSTAMP;
     }
 
     public static RateService getById(int id) {
